@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTU Microsoft Email Portal · Self-Service</title>
+    <!-- Font Awesome & Google Fonts (same as original) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ===== ROOT VARIABLES (exactly from root.txt) ===== */
+        :root {
+            /* Primary Colors - TTU Brand */
+            --primary-50: #e8f5e8;
+            --primary-100: #c0e0c0;
+            --primary-200: #98cb98;
+            --primary-300: #70b670;
+            --primary-400: #48a148;
+            --primary-500: #228B22;      /* Main TTU Green */
+            --primary-600: #1b721b;
+            --primary-700: #145914;
+            --primary-800: #0d400d;
+            --primary-900: #062706;
+
+            /* Accent Colors - TTU Gold */
+            --accent-50: #fbf5e6;
+            --accent-100: #f5e3b8;
+            --accent-200: #efd18a;
+            --accent-300: #e9bf5c;
+            --accent-400: #e3ad2e;
+            --accent-500: #D4AF37;       /* Main TTU Gold */
+            --accent-600: #b8942a;
+            --accent-700: #9c7a1d;
+            --accent-800: #805f10;
+            --accent-900: #644503;
+
+            /* Neutral Colors */
+            --neutral-50: #fafbfc;
+            --neutral-100: #f4f7fa;      /* Background */
+            --neutral-200: #e9ecf0;
+            --neutral-300: #dee2e8;
+            --neutral-400: #ced3db;
+            --neutral-500: #a0a8b7;
+            --neutral-600: #6c757d;
+            --neutral-700: #495057;
+            --neutral-800: #343a40;
+            --neutral-900: #222222;       /* Text */
+            
+            /* Semantic Colors */
+            --success-50: #e8f2e8;
+            --success-100: #d1e5d1;
+            --success-500: #375623;       /* Success Green */
+            --success-700: #2a441a;
+            
+            --warning-50: #fff2e6;
+            --warning-100: #ffe5cc;
+            --warning-500: #C55A11;       /* Warning Orange */
+            --warning-700: #9e480e;
+            
+            --danger-50: #ffe8e8;
+            --danger-100: #ffd1d1;
+            --danger-500: #dc3545;        /* Danger Red */
+            --danger-700: #b02a37;
+            
+            --info-50: #e6f2ff;
+            --info-500: #0d6efd;
+            
+            /* Status Colors */
+            --status-pending-bg: #fff2e6;
+            --status-pending-text: #C55A11;
+            --status-pending-border: #ffb085;
+            
+            --status-submitted-bg: #e8f2e8;
+            --status-submitted-text: #375623;
+            --status-submitted-border: #9fc59f;
+            
+            --status-inactive-bg: #f0f0f0;
+            --status-inactive-text: #6c757d;
+            --status-inactive-border: #ced3db;
+            
+            /* UI Elements */
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            
+            --border-radius-sm: 0.375rem;
+            --border-radius-md: 0.5rem;
+            --border-radius-lg: 0.75rem;
+            --border-radius-xl: 1rem;
+            --border-radius-2xl: 1.5rem;
+            --border-radius-full: 9999px;
+            
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            
+            --transition-base: all 0.2s ease-in-out;
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            /* Layout */
+            --sidebar-width: 280px;
+            --sidebar-collapsed-width: 80px;
+            --header-height: 70px;
+            --container-padding: 2rem;
+        }
+
+        /* Reset & Base */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--neutral-100);
+            color: var(--neutral-900);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a { text-decoration: none; color: inherit; }
+        ul { list-style: none; }
+        img { max-width: 100%; display: block; }
+        button { font-family: inherit; cursor: pointer; border: none; background: none; }
+
+        /* ===== UTILITY / SHARED ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            padding: 0.75rem 1.8rem;
+            border-radius: var(--border-radius-full);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: var(--transition-smooth);
+            border: 2px solid transparent;
+            white-space: nowrap;
+        }
+        .btn-primary {
+            background: var(--primary-500);
+            color: white;
+            box-shadow: 0 4px 12px rgba(34, 139, 34, 0.3);
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-600);
+            box-shadow: 0 8px 20px rgba(34, 139, 34, 0.4);
+            transform: translateY(-2px);
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        .btn-secondary {
+            background: white;
+            color: var(--neutral-700);
+            border: 2px solid var(--neutral-300);
+        }
+        .btn-secondary:hover {
+            background: var(--neutral-50);
+            border-color: var(--neutral-400);
+            transform: translateY(-2px);
+        }
+        .license-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--border-radius-full);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .license-student {
+            background: var(--info-50);
+            color: var(--info-500);
+        }
+        .license-faculty {
+            background: var(--accent-50);
+            color: var(--accent-700);
+        }
+
+        /* ===== NAVBAR ===== */
+        .navbar {
+            background: white;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+        }
+        .nav-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 var(--container-padding);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: var(--primary-500);
+            border-radius: var(--border-radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.3rem;
+        }
+        .logo-text {
+            font-weight: 700;
+            font-size: 1.4rem;
+            color: var(--neutral-900);
+            letter-spacing: -0.5px;
+        }
+        .logo-text span {
+            color: var(--primary-500);
+        }
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        .nav-links a {
+            font-weight: 500;
+            color: var(--neutral-600);
+            transition: var(--transition-base);
+            font-size: 0.95rem;
+            position: relative;
+        }
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--primary-500);
+        }
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--primary-500);
+            border-radius: 2px;
+        }
+        .help-btn {
+            background: var(--primary-50);
+            color: var(--primary-600);
+            padding: 0.55rem 1.3rem;
+            border-radius: var(--border-radius-full);
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition-base);
+        }
+        .help-btn:hover {
+            background: var(--primary-100);
+        }
+
+        /* ===== MAIN ===== */
+        .main-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 var(--container-padding) 3rem;
+        }
+
+        /* ===== HERO ===== */
+        .hero-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+            padding: 3rem 0 4rem;
+        }
+        .hero-content h1 {
+            font-size: 2.9rem;
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: -1px;
+            color: var(--neutral-900);
+            margin-bottom: 1.2rem;
+        }
+        .hero-content h1 span {
+            color: var(--primary-500);
+        }
+        .hero-description {
+            font-size: 1.1rem;
+            color: var(--neutral-600);
+            margin-bottom: 2rem;
+            max-width: 520px;
+        }
+        .stats-container {
+            display: flex;
+            gap: 2.5rem;
+            margin-bottom: 2.5rem;
+        }
+        .stat-item {
+            text-align: left;
+        }
+        .stat-number {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: var(--primary-600);
+            line-height: 1.2;
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--neutral-500);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        /* Hero Image / Carousel */
+        .hero-image {
+            position: relative;
+        }
+        .carousel-container {
+            position: relative;
+            border-radius: var(--border-radius-2xl);
+            overflow: hidden;
+            box-shadow: var(--shadow-xl);
+            aspect-ratio: 4 / 3;
+            background: var(--neutral-200);
+        }
+        .carousel-slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 0.7s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .carousel-slide.active {
+            opacity: 1;
+            z-index: 1;
+        }
+        .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .slide-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 2rem 1.5rem 1.5rem;
+            background: linear-gradient(transparent, rgba(0,0,0,0.75));
+            color: white;
+        }
+        .slide-overlay h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+        }
+        .slide-overlay p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .carousel-controls {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 1rem;
+            transform: translateY(-50%);
+            z-index: 10;
+            pointer-events: none;
+        }
+        .carousel-control {
+            width: 42px;
+            height: 42px;
+            border-radius: var(--border-radius-full);
+            background: rgba(255,255,255,0.25);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: var(--transition-base);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .carousel-control:hover {
+            background: rgba(255,255,255,0.45);
+        }
+        .carousel-indicators {
+            position: absolute;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.5rem;
+            z-index: 10;
+        }
+        .indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: var(--border-radius-full);
+            background: rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: var(--transition-base);
+        }
+        .indicator.active {
+            background: white;
+            width: 24px;
+        }
+
+        /* Floating cards */
+        .floating-card {
+            position: absolute;
+            background: white;
+            border-radius: var(--border-radius-lg);
+            padding: 0.85rem 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: var(--shadow-lg);
+            font-size: 0.85rem;
+            z-index: 20;
+        }
+        .floating-card i {
+            font-size: 1.4rem;
+            color: var(--primary-500);
+        }
+        .floating-card strong {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--neutral-900);
+        }
+        .floating-card small {
+            color: var(--neutral-500);
+            font-size: 0.75rem;
+        }
+        .card-1 { top: 10%; left: -1.5rem; }
+        .card-2 { bottom: 12%; right: -1.5rem; }
+
+        /* ===== SECTIONS ===== */
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .section-title h2 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: var(--neutral-900);
+            margin-bottom: 0.5rem;
+        }
+        .section-title p {
+            color: var(--neutral-600);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Features */
+        .features-section {
+            padding: 4rem 0;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.8rem;
+        }
+        .feature-card {
+            background: white;
+            border-radius: var(--border-radius-xl);
+            padding: 2rem 1.8rem;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition-smooth);
+            border: 1px solid var(--neutral-200);
+        }
+        .feature-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-6px);
+            border-color: var(--primary-200);
+        }
+        .feature-icon {
+            width: 52px;
+            height: 52px;
+            background: var(--primary-50);
+            border-radius: var(--border-radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-600);
+            font-size: 1.5rem;
+            margin-bottom: 1.2rem;
+        }
+        .feature-card h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 0.6rem;
+            color: var(--neutral-900);
+        }
+        .feature-card p {
+            font-size: 0.9rem;
+            color: var(--neutral-600);
+            line-height: 1.6;
+        }
+
+        /* Steps Preview */
+        .steps-preview {
+            padding: 4rem 0;
+        }
+        .steps-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+        }
+        .step-preview-card {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            padding: 1.8rem 1.2rem;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--neutral-200);
+            transition: var(--transition-smooth);
+            position: relative;
+        }
+        .step-preview-card:hover {
+            border-color: var(--primary-300);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-4px);
+        }
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-500);
+            color: white;
+            border-radius: var(--border-radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin: 0 auto 1rem;
+        }
+        .step-preview-card h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--neutral-900);
+        }
+        .step-preview-card p {
+            font-size: 0.8rem;
+            color: var(--neutral-500);
+            line-height: 1.5;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, var(--primary-600), var(--primary-800));
+            border-radius: var(--border-radius-2xl);
+            padding: 3.5rem 2rem;
+            text-align: center;
+            color: white;
+            margin: 2rem 0;
+        }
+        .cta-section h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+        .cta-section p {
+            opacity: 0.9;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+        .cta-section .btn-primary {
+            background: white;
+            color: var(--primary-700);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+        .cta-section .btn-primary:hover {
+            background: var(--neutral-50);
+            transform: translateY(-3px);
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--neutral-900);
+            color: var(--neutral-400);
+            padding: 3rem 0 1.5rem;
+            margin-top: 3rem;
+        }
+        .footer-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 var(--container-padding);
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 3rem;
+        }
+        .footer-section h3 {
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .footer-section p {
+            font-size: 0.9rem;
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+        .social-links {
+            display: flex;
+            gap: 0.75rem;
+        }
+        .social-links a {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--border-radius-full);
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition-base);
+            color: var(--neutral-300);
+        }
+        .social-links a:hover {
+            background: var(--primary-500);
+            color: white;
+        }
+        .footer-links li {
+            margin-bottom: 0.6rem;
+            font-size: 0.9rem;
+        }
+        .footer-links a {
+            transition: var(--transition-base);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .footer-links a:hover {
+            color: var(--primary-400);
+        }
+        .footer-links i {
+            font-size: 0.7rem;
+            color: var(--primary-500);
+        }
+        .footer-bottom {
+            max-width: 1280px;
+            margin: 2rem auto 0;
+            padding: 1.5rem var(--container-padding) 0;
+            border-top: 1px solid var(--neutral-800);
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--neutral-500);
+        }
+
+        /* ===== MODAL ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: var(--border-radius-xl);
+            max-width: 560px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 2rem;
+            position: relative;
+            box-shadow: var(--shadow-xl);
+        }
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1.2rem;
+            font-size: 1.8rem;
+            color: var(--neutral-400);
+            transition: var(--transition-base);
+            line-height: 1;
+        }
+        .modal-close:hover {
+            color: var(--danger-500);
+        }
+        .modal-content h2 {
+            font-size: 1.6rem;
+            margin-bottom: 0.3rem;
+            color: var(--neutral-900);
+        }
+        .modal-content > p {
+            color: var(--neutral-500);
+            margin-bottom: 1.5rem;
+        }
+        .faq-item {
+            border-bottom: 1px solid var(--neutral-200);
+            padding: 1rem 0;
+        }
+        .faq-item:last-of-type {
+            border-bottom: none;
+        }
+        .faq-question {
+            font-weight: 600;
+            color: var(--neutral-800);
+            margin-bottom: 0.4rem;
+            font-size: 0.95rem;
+        }
+        .faq-answer {
+            font-size: 0.9rem;
+            color: var(--neutral-600);
+            line-height: 1.6;
+        }
+
+        /* ===== PORTAL SPECIFIC ===== */
+        .portal-header {
+            text-align: center;
+            padding: 2rem 0 1rem;
+        }
+        .portal-header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary-700);
+            letter-spacing: -0.5px;
+        }
+        .portal-header .subtitle {
+            color: var(--neutral-600);
+            font-size: 1rem;
+            margin-top: 0.25rem;
+        }
+        .portal-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 var(--container-padding) 3rem;
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2.5rem;
+            position: relative;
+            padding: 0 0.5rem;
+        }
+        .progress-bar::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 40px;
+            right: 40px;
+            height: 3px;
+            background: var(--neutral-300);
+            z-index: 0;
+        }
+        .progress-step {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            color: var(--neutral-500);
+            font-size: 0.85rem;
+            width: 20%;
+        }
+        .progress-step::before {
+            content: '';
+            width: 40px;
+            height: 40px;
+            border-radius: var(--border-radius-full);
+            background: white;
+            border: 3px solid var(--neutral-300);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--neutral-500);
+            transition: var(--transition-smooth);
+            box-sizing: border-box;
+            line-height: 1;
+        }
+        .progress-step.active::before {
+            border-color: var(--primary-500);
+            background: var(--primary-500);
+            color: white;
+            box-shadow: 0 0 0 4px rgba(34,139,34,0.15);
+        }
+        .progress-step.completed::before {
+            border-color: var(--primary-500);
+            background: var(--primary-500);
+            color: white;
+            content: '✓';
+            font-size: 1.1rem;
+        }
+        .progress-step.completed .step-label,
+        .progress-step.active .step-label {
+            color: var(--primary-700);
+        }
+        .step-label {
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+            transition: var(--transition-base);
+        }
+
+        /* Step containers */
+        .step-container {
+            display: none;
+            background: white;
+            border-radius: var(--border-radius-xl);
+            padding: 2rem 2.2rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--neutral-200);
+            animation: fadeSlide 0.35s ease;
+        }
+        .step-container.active {
+            display: block;
+        }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .step-container h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--neutral-900);
+            margin-bottom: 0.4rem;
+        }
+        .step-container > p {
+            color: var(--neutral-600);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 1rem 1.2rem;
+            border-radius: var(--border-radius-md);
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            border-left: 4px solid transparent;
+        }
+        .alert-info {
+            background: var(--info-50);
+            border-left-color: var(--info-500);
+            color: var(--neutral-800);
+        }
+        .alert-success {
+            background: var(--success-50);
+            border-left-color: var(--success-500);
+            color: var(--success-700);
+        }
+
+        /* Google Sign-In */
+        .google-signin-container {
+            display: flex;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+        .verified-email {
+            background: var(--primary-50);
+            padding: 1rem 1.2rem;
+            border-radius: var(--border-radius-md);
+            margin: 1rem 0;
+            display: none;
+            border: 1px solid var(--primary-200);
+        }
+        .verified-email.show {
+            display: block;
+        }
+        .verified-email p {
+            margin-bottom: 0.25rem;
+            font-size: 0.95rem;
+        }
+
+        /* Consent / ToS scroll boxes */
+        .consent-container {
+            max-height: 380px;
+            overflow-y: auto;
+            border: 1px solid var(--neutral-300);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            background: var(--neutral-50);
+            scroll-behavior: smooth;
+        }
+        .consent-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .consent-container::-webkit-scrollbar-track {
+            background: var(--neutral-200);
+            border-radius: 4px;
+        }
+        .consent-container::-webkit-scrollbar-thumb {
+            background: var(--neutral-400);
+            border-radius: 4px;
+        }
+        .consent-text h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--neutral-800);
+            margin: 1.5rem 0 0.5rem;
+        }
+        .consent-text h3:first-of-type {
+            margin-top: 0;
+        }
+        .consent-text p, .consent-text li {
+            font-size: 0.9rem;
+            color: var(--neutral-700);
+            line-height: 1.7;
+            margin-bottom: 0.5rem;
+        }
+        .consent-text ul {
+            padding-left: 1.5rem;
+            margin-bottom: 0.8rem;
+            list-style: disc;
+        }
+
+        /* Checkbox groups */
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            font-size: 0.95rem;
+            color: var(--neutral-700);
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--primary-500);
+            margin-top: 2px;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        .checkbox-group label {
+            cursor: pointer;
+            line-height: 1.5;
+        }
+
+        /* Form inputs */
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--neutral-800);
+            margin-bottom: 0.4rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--neutral-300);
+            border-radius: var(--border-radius-md);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: var(--transition-base);
+            background: white;
+            color: var(--neutral-900);
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-500);
+            box-shadow: 0 0 0 4px rgba(34,139,34,0.1);
+        }
+        .form-group input:read-only {
+            background: var(--neutral-100);
+            cursor: not-allowed;
+        }
+        .form-group small {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--neutral-500);
+            margin-top: 0.3rem;
+        }
+
+        .email-display-banner {
+            background: var(--primary-50);
+            padding: 0.9rem 1.2rem;
+            border-radius: var(--border-radius-md);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            border: 1px solid var(--primary-200);
+        }
+
+        /* Navigation buttons */
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--neutral-200);
+        }
+
+        /* Confirmation details */
+        .confirmation-details {
+            background: var(--neutral-50);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--neutral-200);
+        }
+        .confirmation-details h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--neutral-800);
+        }
+        .detail-row {
+            display: flex;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--neutral-200);
+            font-size: 0.95rem;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            width: 160px;
+            font-weight: 600;
+            color: var(--neutral-600);
+            flex-shrink: 0;
+        }
+        .detail-value {
+            color: var(--neutral-900);
+            font-weight: 500;
+            word-break: break-word;
+        }
+        .password-display {
+            font-family: 'Courier New', monospace;
+            background: var(--neutral-800);
+            color: var(--accent-400);
+            padding: 0.35rem 0.75rem;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+            display: inline-block;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero-section { grid-template-columns: 1fr; text-align: center; }
+            .hero-description { margin-left: auto; margin-right: auto; }
+            .stats-container { justify-content: center; }
+            .cta-buttons { justify-content: center; }
+            .features-grid { grid-template-columns: repeat(2, 1fr); }
+            .steps-container { grid-template-columns: repeat(3, 1fr); }
+            .footer-container { grid-template-columns: 1fr 1fr; }
+            .floating-card { display: none; }
+        }
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .features-grid { grid-template-columns: 1fr; }
+            .steps-container { grid-template-columns: repeat(2, 1fr); }
+            .footer-container { grid-template-columns: 1fr; }
+            .hero-content h1 { font-size: 2.1rem; }
+            .section-title h2 { font-size: 1.7rem; }
+            .progress-step .step-label { font-size: 0.65rem; }
+            .progress-step::before { width: 34px; height: 34px; font-size: 0.85rem; }
+            .detail-row { flex-direction: column; gap: 0.2rem; }
+            .detail-label { width: auto; }
+            .navigation-buttons { flex-direction: column; }
+            .navigation-buttons .btn { width: 100%; }
+            .step-container { padding: 1.5rem; }
+        }
+        @media (max-width: 480px) {
+            .stats-container { flex-direction: column; gap: 1rem; align-items: center; }
+            .steps-container { grid-template-columns: 1fr; }
+            .progress-step .step-label { display: none; }
+            .progress-bar::before { left: 20px; right: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ========== LANDING PAGE SECTION ========== -->
+    <!-- Navigation -->
+    <nav class="navbar" id="landingNav">
+        <div class="nav-container">
+            <div class="logo">
+                <div class="logo-icon"><i class="fas fa-envelope"></i></div>
+                <div class="logo-text">TTU<span>Portal</span></div>
+            </div>
+            <div class="nav-links">
+                <a href="#home" class="active">Home</a>
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How It Works</a>
+                <a href="#support">Support</a>
+            </div>
+            <button class="help-btn" onclick="openHelpModal()">
+                <i class="fas fa-question-circle"></i> FAQ
+            </button>
+        </div>
+    </nav>
+
+    <main class="main-content" id="landingMain">
+        <!-- Hero Section -->
+        <section class="hero-section" id="home">
+            <div class="hero-content">
+                <h1>Welcome to the <span>TTU Microsoft</span> Email self-service Portal</h1>
+                <p class="hero-description">Your gateway to academic and professional communication. Get your institutional Microsoft 365 email account with just a few simple steps.</p>
+                <div class="stats-container">
+                    <div class="stat-item"><div class="stat-number">3,000+</div><div class="stat-label">Active Users</div></div>
+                    <div class="stat-item"><div class="stat-number">24/7</div><div class="stat-label">Support</div></div>
+                    <div class="stat-item"><div class="stat-number">99.9%</div><div class="stat-label">Uptime</div></div>
+                </div>
+                <div class="cta-buttons">
+                    <button class="btn btn-primary" onclick="startRequest()"><i class="fas fa-rocket"></i> Get Started Now</button>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="carousel-container" id="carousel">
+                    <div class="carousel-slide active" id="slide1">
+                        <img src="/server/src/resources/collaborate.jpg" alt="Students collaborating">
+                        <div class="slide-overlay"><h3>Collaborate Seamlessly</h3><p>Work together on projects using Microsoft Teams and SharePoint</p></div>
+                    </div>
+                    <div class="carousel-slide" id="slide2">
+                        <img src="/server/src/resources/access.jpg" alt="Students studying">
+                        <div class="slide-overlay"><h3>Access Anywhere, Anytime</h3><p>Your emails and files available on all your devices</p></div>
+                    </div>
+                    <div class="carousel-slide" id="slide3">
+                        <img src="/server/src/resources/digital.jpg" alt="Modern campus">
+                        <div class="slide-overlay"><h3>Modern Digital Campus</h3><p>Join TTU's digital transformation with Microsoft 365</p></div>
+                    </div>
+                    <div class="carousel-slide" id="slide4">
+                        <img src="/server/src/resources/uni.jpg" alt="Library">
+                        <div class="slide-overlay"><h3>1TB Cloud Storage</h3><p>Store all your academic work securely in OneDrive</p></div>
+                    </div>
+                    <div class="carousel-controls">
+                        <div class="carousel-control" onclick="prevSlide()"><i class="fas fa-chevron-left"></i></div>
+                        <div class="carousel-control" onclick="nextSlide()"><i class="fas fa-chevron-right"></i></div>
+                    </div>
+                    <div class="carousel-indicators" id="carouselIndicators">
+                        <div class="indicator active" onclick="goToSlide(0)"></div>
+                        <div class="indicator" onclick="goToSlide(1)"></div>
+                        <div class="indicator" onclick="goToSlide(2)"></div>
+                        <div class="indicator" onclick="goToSlide(3)"></div>
+                    </div>
+                </div>
+                <div class="floating-card card-1"><i class="fas fa-check-circle"></i><div><strong>Quick Setup</strong><small>Less than 5 mins</small></div></div>
+                <div class="floating-card card-2"><i class="fas fa-shield-alt"></i><div><strong>Secure</strong><small>Data protected</small></div></div>
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section class="features-section" id="features">
+            <div class="section-title">
+                <h2>Why Choose TTU Microsoft Email?</h2>
+                <p>Experience the power of Microsoft 365 with features designed for academic excellence</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card"><div class="feature-icon"><i class="fas fa-graduation-cap"></i></div><h3>Student & Faculty Licenses</h3><p>Get the right license based on your role - Student or Faculty, with full access to Microsoft 365 tools.</p></div>
+                <div class="feature-card"><div class="feature-icon"><i class="fas fa-cloud"></i></div><h3>1TB Cloud Storage</h3><p>Store your academic work, research papers, and projects securely in OneDrive with 1TB of space.</p></div>
+                <div class="feature-card"><div class="feature-icon"><i class="fas fa-video"></i></div><h3>Microsoft Teams</h3><p>Collaborate with classmates and colleagues using Teams for video calls, chat, and file sharing.</p></div>
+                <div class="feature-card"><div class="feature-icon"><i class="fas fa-file-word"></i></div><h3>Office 365 Apps</h3><p>Access Word, Excel, PowerPoint, and other Office apps online or download them to your devices.</p></div>
+                <div class="feature-card"><div class="feature-icon"><i class="fas fa-mobile-alt"></i></div><h3>Cross-Platform Access</h3><p>Access your email and files from any device - computer, tablet, or smartphone.</p></div>
+                <div class="feature-card"><div class="feature-icon"><i class="fas fa-lock"></i></div><h3>Enterprise Security</h3><p>Bank-level security with multi-factor authentication and data encryption.</p></div>
+            </div>
+        </section>
+
+        <!-- Steps Preview -->
+        <section class="steps-preview" id="how-it-works">
+            <div class="section-title">
+                <h2>How It Works</h2>
+                <p>Get your institutional email in 5 simple steps</p>
+            </div>
+            <div class="steps-container">
+                <div class="step-preview-card"><div class="step-number">1</div><h4>Verify Your Email</h4><p>Sign in with your institutional Google account</p><i class="fas fa-check-circle" style="color:var(--primary-500);margin-top:1rem;"></i></div>
+                <div class="step-preview-card"><div class="step-number">2</div><h4>Review Terms of Service</h4><p>Read and accept the Terms of Service form</p><i class="fas fa-file-signature" style="color:var(--primary-500);margin-top:1rem;"></i></div>
+                <div class="step-preview-card"><div class="step-number">3</div><h4>Review Consent</h4><p>Read and accept the data protection consent form</p><i class="fas fa-file-signature" style="color:var(--primary-500);margin-top:1rem;"></i></div>
+                <div class="step-preview-card"><div class="step-number">4</div><h4>Personal Details</h4><p>Provide your name and display name for your account</p><i class="fas fa-user-edit" style="color:var(--primary-500);margin-top:1rem;"></i></div>
+                <div class="step-preview-card"><div class="step-number">5</div><h4>Confirmation</h4><p>Get your account details and temporary password</p><i class="fas fa-check-double" style="color:var(--primary-500);margin-top:1rem;"></i></div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="cta-section">
+            <h2>Ready to Get Started?</h2>
+            <p>Join the TTU community with your institutional Microsoft 365 email account</p>
+            <button class="btn btn-primary" onclick="startRequest()"><i class="fas fa-arrow-right"></i> Proceed to Self-Service Portal</button>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer" id="landingFooter">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3>About TTU</h3>
+                <p>Taita Taveta University is committed to providing quality education and modern digital tools to our students and faculty members.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul class="footer-links">
+                    <li><a href="https://ttu.ac.ke" target="_blank"><i class="fas fa-chevron-right"></i> TTU Website</a></li>
+                    <li><a href="https://students.ttu.ac.ke" target="_blank"><i class="fas fa-chevron-right"></i> Student Portal</a></li>
+                    <li><a href="https://staff.ttu.ac.ke" target="_blank"><i class="fas fa-chevron-right"></i> Staff Portal</a></li>
+                    <li><a href="mailto:support@ttu.ac.ke"><i class="fas fa-chevron-right"></i> IT Support</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Contact Us</h3>
+                <ul class="footer-links">
+                    <li><i class="fas fa-map-marker-alt"></i> Voi, Taita Taveta County</li>
+                    <li><i class="fas fa-phone"></i> +254 123 456 789</li>
+                    <li><i class="fas fa-envelope"></i> support@ttu.ac.ke</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 Taita Taveta University. All rights reserved. | Kenya Data Protection Act, 2019 Compliant</p>
+        </div>
+    </footer>
+
+    <!-- ========== PORTAL PAGE SECTION (hidden initially) ========== -->
+    <div id="portalView" style="display: none;">
+        <header class="portal-header">
+            <h1>TTU Microsoft Email Request Portal</h1>
+            <p class="subtitle">For students and staff of Taita Taveta University</p>
+        </header>
+
+        <main class="portal-container">
+            <!-- Progress Bar -->
+            <div class="progress-bar">
+                <div class="progress-step active" id="step1-indicator">1<span class="step-label">Google Sign-In</span></div>
+                <div class="progress-step" id="step2-indicator">2<span class="step-label">Terms of Service</span></div>
+                <div class="progress-step" id="step3-indicator">3<span class="step-label">Consent Form</span></div>
+                <div class="progress-step" id="step4-indicator">4<span class="step-label">Personal Details</span></div>
+                <div class="progress-step" id="step5-indicator">5<span class="step-label">Confirmation</span></div>
+            </div>
+
+            <!-- Step 1 -->
+            <div class="step-container active" id="step1">
+                <h2>Step 1: Verify Your Institutional Email</h2>
+                <p>Sign in with your TTU Google account to verify your institutional email address.</p>
+                <div class="alert alert-info"><strong>Important:</strong> You must use your institutional email (@students.ttu.ac.ke for students or @ttu.ac.ke for faculty/staff).</div>
+                <div class="google-signin-container">
+                    <div id="g_id_onload" data-client_id="400155596232-jv2jcg4fg4jopeq37qouhnieo8ji0hvc.apps.googleusercontent.com" data-callback="handleCredentialResponse" data-auto_prompt="false"></div>
+                    <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left"></div>
+                </div>
+                <div class="verified-email" id="verifiedEmailContainer">
+                    <p><strong>Verified Email:</strong> <span id="verifiedEmail"></span></p>
+                    <p id="licensePreview"></p>
+                </div>
+                <div class="navigation-buttons">
+                    <button class="btn btn-secondary" onclick="landing()">Return to Home page</button>
+                    <button class="btn btn-primary" id="step1-next" disabled onclick="nextStep()">Continue to Terms of Service</button>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="step-container" id="step2">
+                <h2>Step 2: Terms of Service Agreement</h2>
+                <p>Please read the following Terms of Service carefully before using your TTU Microsoft email account.</p>
+                <div class="consent-container" style="max-height:500px;">
+                    <div class="consent-text">
+                        <h3>TAITA TAVETA UNIVERSITY MICROSOFT 365 TERMS OF SERVICE</h3>
+                        <p><strong>Effective Date:</strong> January 1, 2026</p>
+                        <h3>1. ACCEPTANCE OF TERMS</h3><p>By using your TTU Microsoft email account, you agree to be bound by these Terms of Service. If you do not agree to these terms, you will not be permitted to use the institutional email service.</p>
+                        <h3>2. ELIGIBILITY</h3><p>2.1. You must be a currently enrolled student or employed faculty/staff member of Taita Taveta University.<br>2.2. Your account will remain active only while you maintain active status with the university.<br>2.3. Upon graduation, termination of employment, or withdrawal from the university, access to the account will be terminated after a grace period of 12 months.</p>
+                        <h3>3. ACCEPTABLE USE POLICY</h3><p>3.1. Your TTU email account is provided for academic and professional purposes only.<br>3.2. You agree NOT to use the account for:</p><ul><li>Commercial purposes or business activities</li><li>Political campaigning or lobbying</li><li>Harassment, bullying, or threatening others</li><li>Impersonation of university officials or other individuals</li><li>Distribution of spam, chain letters, or unsolicited messages</li><li>Sharing of confidential university information</li><li>Illegal activities or promotion of illegal acts</li><li>Copyright infringement or sharing pirated materials</li><li>Hacking, phishing, or other cybersecurity threats</li></ul>
+                        <h3>4. ACCOUNT SECURITY</h3><p>4.1. You are responsible for maintaining the security of your account credentials.<br>4.2. You must not share your password with anyone, including university staff.<br>4.3. You must enable multi-factor authentication when prompted.<br>4.4. Report any suspected unauthorized access immediately to IT support.<br>4.5. You are responsible for all activities that occur under your account.</p>
+                        <h3>5. DATA STORAGE AND RETENTION</h3><p>5.1. Your email and files are stored on Microsoft servers located in various regions.<br>5.2. Maximum storage capacity is 1TB per user (subject to change).<br>5.3. The university may archive emails and files for legal or administrative purposes.<br>5.4. Deleted emails may be recoverable for up to 30 days after deletion.<br>5.5. Upon account termination, you have 30 days to export your data before permanent deletion.</p>
+                        <h3>6. PRIVACY AND MONITORING</h3><p>6.1. The university respects your privacy but reserves the right to monitor communications for security purposes.<br>6.2. Automated systems may scan emails for malware, spam, and policy violations.<br>6.3. The university may access account contents if required by law or university policy.<br>6.4. Your personal data will be processed in accordance with the Kenya Data Protection Act, 2019.<br>6.5. Do not use your university email for sensitive personal communications.</p>
+                        <h3>7. INTELLECTUAL PROPERTY</h3><p>7.1. You retain ownership of any original content you create and store in your account.<br>7.2. By using the service, you grant the university a license to store and manage your data.<br>7.3. The university does not claim ownership of your personal files and communications.<br>7.4. You must respect the intellectual property rights of others.</p>
+                        <h3>8. PROHIBITED CONTENT</h3><p>You may not store or share content that:</p><ul><li>Contains hate speech or discriminatory material</li><li>Depicts violence or exploitation</li><li>Contains pornography or sexually explicit material</li><li>Promotes terrorism or violent extremism</li><li>Contains malware or malicious code</li><li>Violates Kenyan law or university policies</li></ul>
+                        <h3>9. SERVICE AVAILABILITY</h3><p>9.1. The university aims for 99.9% service availability but does not guarantee uninterrupted access.<br>9.2. Scheduled maintenance may occur during off-peak hours.<br>9.3. The university is not liable for service interruptions caused by factors beyond its control.<br>9.4. Microsoft may occasionally perform updates that affect service availability.</p>
+                        <h3>10. ACCOUNT SUSPENSION AND TERMINATION</h3><p>The university may suspend or terminate your account for:</p><ul><li>Violation of these Terms of Service</li><li>Suspected security breaches or unauthorized access</li><li>Loss of eligibility (graduation, withdrawal, termination)</li><li>Extended periods of inactivity (over 12 months)</li><li>Court orders or legal requirements</li><li>Disruptive behavior affecting other users</li></ul>
+                        <h3>11. LIMITATION OF LIABILITY</h3><p>11.1. The university is not liable for any indirect, incidental, or consequential damages.<br>11.2. The university is not responsible for lost data, files, or emails.<br>11.3. Users are encouraged to maintain backups of important data.<br>11.4. The university's maximum liability is limited to the fees paid for the service (if any).</p>
+                        <h3>12. CHANGES TO TERMS</h3><p>12.1. The university may update these terms at any time.<br>12.2. Users will be notified of material changes via email.<br>12.3. Continued use of the account after changes constitutes acceptance of new terms.</p>
+                        <h3>13. GOVERNING LAW</h3><p>13.1. These terms are governed by the laws of the Republic of Kenya.<br>13.2. Any disputes shall be resolved in Kenyan courts.</p>
+                        <h3>14. CONTACT INFORMATION</h3><p>For questions about these Terms of Service, contact:<br><strong>IT Support:</strong> support@ttu.ac.ke<br><strong>Data Protection Officer:</strong> dpo@ttu.ac.ke<br><strong>Phone:</strong> +254 123 456 789</p>
+                        <p style="margin-top:20px;font-style:italic;">By accepting these terms, you acknowledge that you have read, understood, and agree to be bound by all provisions of this Terms of Service agreement.</p>
+                    </div>
+                </div>
+                <div class="form-group"><div class="checkbox-group"><input type="checkbox" id="tosAcceptCheckbox"><label for="tosAcceptCheckbox">I have read, understood, and agree to the Terms of Service above.</label></div></div>
+                <div class="form-group"><div class="checkbox-group"><input type="checkbox" id="tosDenyCheckbox"><label for="tosDenyCheckbox">I do NOT agree to the Terms of Service.</label></div></div>
+                <div class="navigation-buttons">
+                    <button class="btn btn-secondary" onclick="prevStep()">Back</button>
+                    <button class="btn btn-primary" id="step2-next" disabled onclick="nextStep()">Continue to Consent Form</button>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="step-container" id="step3">
+                <h2>Step 3: Data Protection Consent</h2>
+                <p>Please read the following consent form carefully and confirm your agreement.</p>
+                <div class="consent-container">
+                    <div class="consent-text">
+                        <h3>DATA SUBJECT CONSENT FORM</h3>
+                        <p>Taita Taveta University (TTU) is committed to protecting your personal data in accordance with the Kenya Data Protection Act, 2019.</p>
+                        <h3>1. Purpose of Data Collection</h3><p>TTU collects and processes your personal information for the purpose of creating and managing your Microsoft 365 institutional account, which includes email services, document storage, and collaboration tools essential for your academic or professional activities at TTU.</p>
+                        <h3>2. Data Being Collected</h3><p>The personal data collected includes: your name, institutional email address, display name, and account credentials. This data is necessary for account creation, authentication, and provision of Microsoft 365 services.</p>
+                        <h3>3. How Your Data Will Be Used</h3><p>Your personal data will be used to: create and manage your Microsoft 365 account; assign appropriate licensing based on your role (student or faculty/staff); provide technical support; ensure security of TTU's digital resources; and communicate important institutional information.</p>
+                        <h3>4. Data Sharing</h3><p>Your data will be shared with Microsoft Corporation for the purpose of providing Microsoft 365 services. Microsoft acts as a data processor and is contractually obligated to protect your data in accordance with applicable data protection laws.</p>
+                        <h3>5. Data Retention</h3><p>Your personal data will be retained for the duration of your affiliation with TTU plus a period of 12 months thereafter, after which it will be securely archived or deleted in accordance with TTU's data retention policy.</p>
+                        <h3>6. Your Rights</h3><p>Under the Kenya Data Protection Act, 2019, you have the right to: access your personal data; request correction of inaccurate data; object to processing; request deletion of data; and withdraw consent at any time. To exercise these rights, contact TTU's Data Protection Officer at dpo@ttu.ac.ke.</p>
+                        <h3>7. Consent Withdrawal</h3><p>You may withdraw this consent at any time by contacting TTU's IT department. Withdrawal of consent will result in termination of your Microsoft 365 account and associated services.</p>
+                        <h3>8. Consent Statement</h3><p>By checking the box below, I confirm that I have read and understood this consent form. I voluntarily consent to the collection, processing, and sharing of my personal data as described above for the purpose of creating and managing my Microsoft 365 institutional account.</p>
+                    </div>
+                </div>
+                <div class="form-group"><div class="checkbox-group"><input type="checkbox" id="consentAcceptCheckbox"><label for="consentAcceptCheckbox">I have read and agree to the terms and conditions of the consent form above.</label></div></div>
+                <div class="form-group"><div class="checkbox-group"><input type="checkbox" id="consentDenyCheckbox"><label for="consentDenyCheckbox">I do NOT agree to the terms and conditions of the consent form.</label></div></div>
+                <div class="navigation-buttons">
+                    <button class="btn btn-secondary" onclick="prevStep()">Back</button>
+                    <button class="btn btn-primary" id="step3-next" disabled onclick="nextStep()">Continue to Personal Details</button>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="step-container" id="step4">
+                <h2>Step 4: Personal Details</h2>
+                <p>Please provide your personal information for your Microsoft 365 account.</p>
+                <div class="email-display-banner" id="step4-email-display" style="display:none;">
+                    <strong>Verified Email:</strong> <span id="step4-verified-email"></span>
+                    <span class="license-badge" id="step4-license-badge" style="margin-left:10px;"></span>
+                </div>
+                <form id="personalDetailsForm">
+                    <div class="form-group"><label for="firstName">First Name *</label><input type="text" id="firstName" required></div>
+                    <div class="form-group"><label for="lastName">Last Name *</label><input type="text" id="lastName" required></div>
+                    <div class="form-group"><label for="displayName">Display Name *</label><input type="text" id="displayName" required><small>This name will be visible to others in Microsoft 365 services</small></div>
+                    <div class="form-group"><label for="email">Institutional Email</label><input type="email" id="email" readonly style="background-color:#f5f5f5;cursor:not-allowed;"><small>This email was verified in Step 1 and cannot be changed</small></div>
+                </form>
+                <div class="navigation-buttons">
+                    <button class="btn btn-secondary" onclick="prevStep()">Back</button>
+                    <button class="btn btn-primary" id="step4-next" disabled onclick="nextStep()">Review and Submit</button>
+                </div>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="step-container" id="step5">
+                <h2>Step 5: Account Creation Confirmation</h2>
+                <div class="alert alert-success"><p><strong>Success!</strong> Your Microsoft 365 account has been created.</p></div>
+                <div class="confirmation-details">
+                    <h3>Account Details</h3>
+                    <div class="detail-row"><div class="detail-label">Email Address:</div><div class="detail-value" id="confirmationEmail"></div></div>
+                    <div class="detail-row"><div class="detail-label">Account Type:</div><div class="detail-value"><span class="license-badge" id="confirmationLicense"></span></div></div>
+                    <div class="detail-row"><div class="detail-label">Temporary Password:</div><div class="detail-value"><div class="password-display" id="confirmationPassword"></div><small>You will be prompted to change this password on first login</small></div></div>
+                    <div class="detail-row"><div class="detail-label">Full Name:</div><div class="detail-value" id="confirmationName"></div></div>
+                    <div class="detail-row"><div class="detail-label">Display Name:</div><div class="detail-value" id="confirmationDisplayName"></div></div>
+                </div>
+                <div class="alert alert-info"><p><strong>Next Steps:</strong> You will receive a confirmation email with login instructions. Please login within 7 days to activate your account.</p></div>
+                <div class="navigation-buttons">
+                    <button class="btn btn-secondary" onclick="prevStep()">Back</button>
+                    <button class="btn btn-primary" onclick="resetPortal()">Create Another Account</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeHelpModal()">&times;</button>
+            <h2>Need Help?</h2>
+            <p>Find answers to frequently asked questions</p>
+            <div class="faq-item"><div class="faq-question">Who can request a Microsoft email?</div><div class="faq-answer">All registered students and faculty/staff members of Taita Taveta University are eligible for a Microsoft 365 institutional email account.</div></div>
+            <div class="faq-item"><div class="faq-question">What's the difference between student and faculty licenses?</div><div class="faq-answer">Both licenses include the same Microsoft 365 features, but they're assigned based on your role at the university to ensure proper access control.</div></div>
+            <div class="faq-item"><div class="faq-question">How long does the process take?</div><div class="faq-answer">The entire self-service process takes less than 5 minutes. Account creation is instant once you complete all steps.</div></div>
+            <div class="faq-item"><div class="faq-question">What if I forget my password?</div><div class="faq-answer">You can reset your password through the Microsoft password reset portal. Contact IT support if you need assistance.</div></div>
+            <div class="faq-item"><div class="faq-question">Is my data protected?</div><div class="faq-answer">Yes, TTU follows the Kenya Data Protection Act, 2019. Your data is encrypted and processed securely.</div></div>
+            <button class="btn btn-primary" onclick="contactSupport()" style="width:100%;margin-top:1rem;"><i class="fas fa-headset"></i> Contact Support</button>
+        </div>
+    </div>
+
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async></script>
+    <script>
+        // ========== GLOBAL FUNCTIONS ==========
+        const API_BASE_URL = 'http://localhost:5000';
+        let userData = { email:'', firstName:'', lastName:'', displayName:'', licenseType:'', password:'' };
+        let currentStep = 1;
+        let isSubmitting = false;
+        let currentSlide = 0;
+        let autoplayInterval;
+
+        // ---------- CAROUSEL ----------
+        const slides = document.querySelectorAll('.carousel-slide');
+        const indicators = document.querySelectorAll('.indicator');
+        function initCarousel() { showSlide(0); startAutoplay(); }
+        function showSlide(index) {
+            slides.forEach(s => s.classList.remove('active'));
+            indicators.forEach(i => i.classList.remove('active'));
+            slides[index]?.classList.add('active');
+            indicators[index]?.classList.add('active');
+            currentSlide = index;
+        }
+        function nextSlide() { showSlide((currentSlide + 1) % slides.length); resetAutoplay(); }
+        function prevSlide() { showSlide((currentSlide - 1 + slides.length) % slides.length); resetAutoplay(); }
+        function goToSlide(i) { showSlide(i); resetAutoplay(); }
+        function startAutoplay() { autoplayInterval = setInterval(nextSlide, 5000); }
+        function resetAutoplay() { clearInterval(autoplayInterval); startAutoplay(); }
+
+        // ---------- MODAL ----------
+        function openHelpModal() { document.getElementById('helpModal').classList.add('active'); document.body.style.overflow = 'hidden'; }
+        function closeHelpModal() { document.getElementById('helpModal').classList.remove('active'); document.body.style.overflow = 'auto'; }
+        window.addEventListener('click', (e) => { if (e.target === document.getElementById('helpModal')) closeHelpModal(); });
+
+        // ---------- NAVIGATION ----------
+        function startRequest() {
+            document.getElementById('landingNav').style.display = 'none';
+            document.getElementById('landingMain').style.display = 'none';
+            document.getElementById('landingFooter').style.display = 'none';
+            document.getElementById('portalView').style.display = 'block';
+            window.scrollTo(0,0);
+            // Initialize Google sign-in when portal loads
+            if (typeof google !== 'undefined') {
+                google.accounts.id.initialize({
+                    client_id: "400155596232-jv2jcg4fg4jopeq37qouhnieo8ji0hvc.apps.googleusercontent.com",
+                    callback: handleCredentialResponse
+                });
+                google.accounts.id.disableAutoSelect();
+                google.accounts.id.prompt();
+            }
+        }
+        function landing() {
+            document.getElementById('landingNav').style.display = 'flex';
+            document.getElementById('landingMain').style.display = 'block';
+            document.getElementById('landingFooter').style.display = 'block';
+            document.getElementById('portalView').style.display = 'none';
+            window.scrollTo(0,0);
+        }
+        function contactSupport() { window.location.href = 'mailto:support@ttu.ac.ke'; }
+
+        // ---------- PORTAL LOGIC ----------
+        function handleCredentialResponse(response) {
+            const decodeJWT = (token) => {
+                let base64Url = token.split('.')[1];
+                let base64 = base64Url.replace(/-/g,'+').replace(/_/g,'/');
+                let jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+                return JSON.parse(jsonPayload);
+            };
+            const payload = decodeJWT(response.credential);
+            const email = payload.email;
+            if (email.endsWith('@students.ttu.ac.ke') || email.endsWith('@ttu.ac.ke')) {
+                userData.email = email;
+                userData.licenseType = email.endsWith('@students.ttu.ac.ke') ? 'Student' : 'Faculty';
+                document.getElementById('verifiedEmail').textContent = email;
+                document.getElementById('verifiedEmailContainer').classList.add('show');
+                const lp = document.getElementById('licensePreview');
+                lp.textContent = `This email will be assigned the ${userData.licenseType} license.`;
+                lp.style.color = userData.licenseType === 'Student' ? '#1565c0' : '#7b1fa2';
+                lp.style.fontWeight = '600';
+                document.getElementById('step1-next').disabled = false;
+                document.getElementById('email').value = email;
+            } else {
+                alert('Please use a valid TTU institutional email (@students.ttu.ac.ke or @ttu.ac.ke)');
+                google.accounts.id.disableAutoSelect();
+                google.accounts.id.prompt();
+            }
+        }
+
+        function updateStep4Email() {
+            document.getElementById('email').value = userData.email;
+            const display = document.getElementById('step4-email-display');
+            const span = document.getElementById('step4-verified-email');
+            const badge = document.getElementById('step4-license-badge');
+            if (display && span && badge) {
+                span.textContent = userData.email;
+                badge.textContent = userData.licenseType;
+                badge.className = 'license-badge ' + (userData.licenseType === 'Student' ? 'license-student' : 'license-faculty');
+                display.style.display = 'block';
+            }
+        }
+
+        async function nextStep() {
+            if (currentStep === 1) {
+                if (!userData.email) { alert('Please verify your email first.'); return; }
+                currentStep = 2; showStep(2);
+            } else if (currentStep === 2) {
+                const acc = document.getElementById('tosAcceptCheckbox').checked;
+                const den = document.getElementById('tosDenyCheckbox').checked;
+                if (acc) { currentStep = 3; showStep(3); }
+                else if (den) { if (confirm('You chose NOT to accept. Click OK to return to Step 1.')) resetToStep1(); else document.getElementById('tosDenyCheckbox').checked = false; }
+                else { alert('Please agree to the Terms of Service or check denial.'); return; }
+            } else if (currentStep === 3) {
+                const acc = document.getElementById('consentAcceptCheckbox').checked;
+                const den = document.getElementById('consentDenyCheckbox').checked;
+                if (acc) { currentStep = 4; showStep(4); updateStep4Email(); }
+                else if (den) { if (confirm('You chose NOT to accept the consent. Click OK to return to Step 1.')) resetToStep1(); else document.getElementById('consentDenyCheckbox').checked = false; }
+                else { alert('Please agree to the consent form or check denial.'); return; }
+            } else if (currentStep === 4) {
+                const fn = document.getElementById('firstName').value.trim();
+                const ln = document.getElementById('lastName').value.trim();
+                const dn = document.getElementById('displayName').value.trim();
+                if (!fn || !ln || !dn) { alert('Please fill in all required fields.'); return; }
+                userData.firstName = fn; userData.lastName = ln; userData.displayName = dn; userData.password = generatePassword();
+                const btn = document.getElementById('step4-next');
+                btn.disabled = true; btn.textContent = 'Creating Account...';
+                const res = await submitToServer();
+                if (res.success) {
+                    document.getElementById('confirmationEmail').textContent = res.data.email || userData.email;
+                    document.getElementById('confirmationName').textContent = `${fn} ${ln}`;
+                    document.getElementById('confirmationDisplayName').textContent = res.data.displayName || dn;
+                    document.getElementById('confirmationPassword').textContent = userData.password;
+                    const lic = document.getElementById('confirmationLicense');
+                    lic.textContent = res.data.licenseAssigned || userData.licenseType;
+                    lic.className = 'license-badge ' + (userData.licenseType === 'Student' ? 'license-student' : 'license-faculty');
+                    currentStep = 5; showStep(5);
+                } else {
+                    alert(`Registration failed: ${res.error}\nContact support@ttu.ac.ke`);
+                }
+                btn.disabled = false; btn.textContent = 'Review and Submit';
+            }
+        }
+
+        function prevStep() { if (currentStep > 1) { currentStep--; showStep(currentStep); } }
+        function resetToStep1() {
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.getElementById('step2-next').disabled = true;
+            document.getElementById('step3-next').disabled = true;
+            currentStep = 1; showStep(1);
+            google.accounts.id.disableAutoSelect(); google.accounts.id.prompt();
+        }
+        function showStep(n) {
+            document.querySelectorAll('.step-container').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step${n}`).classList.add('active');
+            document.querySelectorAll('.progress-step').forEach((el, i) => {
+                el.classList.remove('active','completed');
+                if (i+1 < n) el.classList.add('completed');
+                else if (i+1 === n) el.classList.add('active');
+            });
+            if (n === 4 && userData.email) updateStep4Email();
+        }
+
+        async function submitToServer() {
+            if (isSubmitting) return { success:false, error:'Already submitting' };
+            isSubmitting = true;
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/self-register`, {
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({
+                        email: userData.email, firstName: userData.firstName,
+                        lastName: userData.lastName, displayName: userData.displayName,
+                        licenseType: userData.licenseType, password: userData.password
+                    })
+                });
+                const data = await res.json();
+                if (data.success) return { success:true, data };
+                return { success:false, error: data.error || data.message || 'Registration failed' };
+            } catch(e) { return { success:false, error:'Network error: Unable to connect' }; }
+            finally { isSubmitting = false; }
+        }
+
+        function generatePassword() {
+            const len = 12;
+            const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+            let p = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt(Math.floor(Math.random()*26))
+                  + "abcdefghijklmnopqrstuvwxyz".charAt(Math.floor(Math.random()*26))
+                  + "0123456789".charAt(Math.floor(Math.random()*10))
+                  + "!@#$%^&*".charAt(Math.floor(Math.random()*8));
+            while (p.length < len) p += charset.charAt(Math.floor(Math.random()*charset.length));
+            return p.split('').sort(() => Math.random()-0.5).join('');
+        }
+
+        function resetPortal() {
+            userData = { email:'', firstName:'', lastName:'', displayName:'', licenseType:'', password:'' };
+            ['firstName','lastName','displayName','email'].forEach(id => document.getElementById(id).value = '');
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.getElementById('verifiedEmailContainer').classList.remove('show');
+            ['step1-next','step2-next','step3-next','step4-next'].forEach(id => document.getElementById(id).disabled = true);
+            document.getElementById('step4-email-display').style.display = 'none';
+            google.accounts.id.disableAutoSelect(); google.accounts.id.prompt();
+            currentStep = 1; showStep(1);
+            localStorage.removeItem('ttuPortalCurrentStep');
+        }
+
+        // ---------- INIT ----------
+        document.addEventListener('DOMContentLoaded', function() {
+            initCarousel();
+
+            // Smooth scroll
+            document.querySelectorAll('a[href^="#"]').forEach(a => {
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const t = document.querySelector(this.getAttribute('href'));
+                    if (t) t.scrollIntoView({ behavior:'smooth' });
+                });
+            });
+
+            // Scroll active link
+            window.addEventListener('scroll', () => {
+                const sections = document.querySelectorAll('section[id]');
+                const pos = window.scrollY + 100;
+                sections.forEach(sec => {
+                    const top = sec.offsetTop, bot = top + sec.offsetHeight;
+                    if (pos >= top && pos < bot) {
+                        document.querySelectorAll('.nav-links a').forEach(l => {
+                            l.classList.remove('active');
+                            if (l.getAttribute('href') === `#${sec.id}`) l.classList.add('active');
+                        });
+                    }
+                });
+            });
+
+            // Checkbox handlers
+            const tosAcc = document.getElementById('tosAcceptCheckbox');
+            const tosDen = document.getElementById('tosDenyCheckbox');
+            const step2Next = document.getElementById('step2-next');
+            if (tosAcc && tosDen && step2Next) {
+                tosAcc.addEventListener('change', function() {
+                    if (this.checked) { tosDen.checked = false; step2Next.disabled = false; }
+                    else if (!tosDen.checked) step2Next.disabled = true;
+                });
+                tosDen.addEventListener('change', function() {
+                    if (this.checked) { tosAcc.checked = false; step2Next.disabled = false; }
+                    else if (!tosAcc.checked) step2Next.disabled = true;
+                });
+            }
+            const conAcc = document.getElementById('consentAcceptCheckbox');
+            const conDen = document.getElementById('consentDenyCheckbox');
+            const step3Next = document.getElementById('step3-next');
+            if (conAcc && conDen && step3Next) {
+                conAcc.addEventListener('change', function() {
+                    if (this.checked) { conDen.checked = false; step3Next.disabled = false; }
+                    else if (!conDen.checked) step3Next.disabled = true;
+                });
+                conDen.addEventListener('change', function() {
+                    if (this.checked) { conAcc.checked = false; step3Next.disabled = false; }
+                    else if (!conAcc.checked) step3Next.disabled = true;
+                });
+            }
+
+            // Step 4 form validation
+            const form = document.getElementById('personalDetailsForm');
+            if (form) {
+                form.addEventListener('input', function() {
+                    const fn = document.getElementById('firstName').value.trim();
+                    const ln = document.getElementById('lastName').value.trim();
+                    const dn = document.getElementById('displayName').value.trim();
+                    document.getElementById('step4-next').disabled = !(fn && ln && dn);
+                });
+            }
+
+            // Initialize Google Sign-In if in portal view
+            if (document.getElementById('portalView').style.display === 'block') {
+                if (typeof google !== 'undefined') {
+                    google.accounts.id.initialize({
+                        client_id: "400155596232-jv2jcg4fg4jopeq37qouhnieo8ji0hvc.apps.googleusercontent.com",
+                        callback: handleCredentialResponse
+                    });
+                }
+            }
+        });
+
+        // Expose for Google callback
+        window.handleCredentialResponse = handleCredentialResponse;
+    </script>
+</body>
+</html>
