@@ -1276,7 +1276,7 @@
                 <p>Sign in with your TTU Google account to verify your institutional email address.</p>
                 <div class="alert alert-info"><strong>Important:</strong> You must use your institutional email (@students.ttu.ac.ke for students or @ttu.ac.ke for faculty/staff).</div>
                 <div class="google-signin-container">
-                    <div id="g_id_onload" data-client_id="400155596232-jv2jcg4fg4jopeq37qouhnieo8ji0hvc.apps.googleusercontent.com" data-callback="handleCredentialResponse" data-auto_prompt="false"></div>
+                    <div id="g_id_onload" data-client_id="1093913433557-coff2vmel9es24vcdj3guk248d4cu0qo.apps.googleusercontent.com" data-callback="handleCredentialResponse" data-auto_prompt="false"></div>
                     <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left"></div>
                 </div>
                 <div class="verified-email" id="verifiedEmailContainer">
@@ -1408,7 +1408,7 @@
     <script src="https://accounts.google.com/gsi/client" async></script>
     <script>
         // ========== GLOBAL FUNCTIONS ==========
-        const API_BASE_URL = 'http://localhost:5000';
+        const API_BASE_URL = 'http://localhost:5000/api';
         let userData = { email:'', firstName:'', lastName:'', displayName:'', licenseType:'', password:'' };
         let currentStep = 1;
         let isSubmitting = false;
@@ -1447,7 +1447,7 @@
             // Initialize Google sign-in when portal loads
             if (typeof google !== 'undefined') {
                 google.accounts.id.initialize({
-                    client_id: "400155596232-jv2jcg4fg4jopeq37qouhnieo8ji0hvc.apps.googleusercontent.com",
+                    client_id: "1093913433557-coff2vmel9es24vcdj3guk248d4cu0qo.apps.googleusercontent.com",
                     callback: handleCredentialResponse
                 });
                 google.accounts.id.disableAutoSelect();
@@ -1678,7 +1678,7 @@
             if (document.getElementById('portalView').style.display === 'block') {
                 if (typeof google !== 'undefined') {
                     google.accounts.id.initialize({
-                        client_id: "400155596232-jv2jcg4fg4jopeq37qouhnieo8ji0hvc.apps.googleusercontent.com",
+                        client_id: "1093913433557-coff2vmel9es24vcdj3guk248d4cu0qo.apps.googleusercontent.com",
                         callback: handleCredentialResponse
                     });
                 }

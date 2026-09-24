@@ -37,7 +37,7 @@ app = FastAPI(title="Azure Admin API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:5500"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:5500" "http://localhost:5501","http://127.0.0.1:5501"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"],
