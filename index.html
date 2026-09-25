@@ -1568,7 +1568,7 @@
             if (isSubmitting) return { success:false, error:'Already submitting' };
             isSubmitting = true;
             try {
-                const res = await fetch(`${API_BASE_URL}/api/self-register`, {
+                const res = await fetch(`${API_BASE_URL}/self-register`, {
                     method:'POST',
                     headers:{'Content-Type':'application/json'},
                     body: JSON.stringify({
