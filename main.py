@@ -1,5 +1,7 @@
 import os
 import time
+import csv
+import io
 import asyncio
 import logging
 from datetime import datetime, timedelta
@@ -7,9 +9,9 @@ from typing import Optional, Any
 from pathlib import Path
 
 import httpx
-from fastapi import FastAPI, HTTPException, Body, Request
+from fastapi import FastAPI, HTTPException, Body, Request, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, EmailStr
 from dotenv import load_dotenv
 
@@ -141,6 +143,48 @@ async def call_graph_api(endpoint: str, method: str = "GET", data: Any = None) -
         )
 
 
+async def graph_request_with_retry(
+    endpoint: str,
+    method: str = "GET",
+    data: Any = None,
+    max_retries: int = 3,
+    base_delay: float = 1.0,
+) -> dict:
+    """Like call_graph_api, but retries Graph throttling (429) and transient 5xx.
+
+    Honours the ``Retry-After`` header on 429 responses, then falls back to
+    exponential backoff with jitter. Built for the bulk member endpoint, which
+    can issue many writes in a burst. Non-retryable responses (4xx other than
+    429) are re-raised immediately as a clean HTTPException.
+    """
+    import random
+
+    attempt = 0
+    while True:
+        try:
+            return await call_graph_api(endpoint, method, data)
+        except HTTPException as e:
+            retryable = e.status_code == 429 or 500 <= e.status_code < 600
+            if not retryable or attempt >= max_retries:
+                raise
+            delay = base_delay * (2 ** attempt) + random.uniform(0, 0.5)
+            # If Graph told us how long to wait, respect it (capped).
+            detail = e.detail
+            if isinstance(detail, str):
+                try:
+                    import json as _json
+                    parsed = _json.loads(detail)
+                    ra = parsed.get("error", {}).get("innerError", {})
+                except Exception:
+                    ra = {}
+            log.warning(
+                f"Graph {e.status_code} on {method} {endpoint} — retry "
+                f"{attempt + 1}/{max_retries} in {delay:.1f}s"
+            )
+            await asyncio.sleep(delay)
+            attempt += 1
+
+
 # ========== HELPERS ==========
 def format_user(user: dict) -> dict:
     upn = user.get("userPrincipalName", "")
@@ -219,6 +263,99 @@ async def resolve_user_id_by_email(email: str) -> str:
             raise HTTPException(status_code=404, detail={"error": "User not found in directory", "email": email})
         raise
     return user["id"]
+
+
+# ========== BULK MEMBER UPLOAD: FILE PARSING ==========
+_EMAIL_RE = __import__("re").compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def _is_emailish(value: str) -> bool:
+    return bool(value and _EMAIL_RE.match(value.strip()))
+
+
+def parse_emails_from_upload(filename: str, content: bytes) -> list[tuple[int, str]]:
+    """Parse an .xlsx/.xlsm/.csv upload into [(row_number, raw_email), ...].
+
+    ``row_number`` is the 1-based spreadsheet row (header = 1) so the report can
+    point staff back to the exact line. Blank rows are skipped. This function
+    never raises on bad *data* — validation happens later per-row — but it does
+    raise HTTPException(400) on an unreadable/corrupt file.
+    """
+    ext = Path(filename or "").suffix.lower()
+    if ext not in BULK_ALLOWED_EXT:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "Unsupported file type",
+                    "accepted": sorted(BULK_ALLOWED_EXT), "received": ext or "(none)"},
+        )
+
+    rows: list[tuple[int, str]] = []
+
+    try:
+        if ext == ".csv":
+            text = content.decode("utf-8-sig", errors="replace")
+            # Sniff delimiter (handles ';' used by some locales).
+            try:
+                dialect = csv.Sniffer().sniff(text[:2048], delimiters=",;\t")
+            except Exception:
+                dialect = csv.excel
+            reader = csv.reader(io.StringIO(text), dialect)
+            table = [r for r in reader]
+            header_cells = table[0] if table else []
+            col = _find_email_column([str(c) for c in header_cells], [str(c) for r in table[1:5] for c in r])
+            start = 1 if col is not None and col < len(header_cells) else 0
+        else:
+            from openpyxl import load_workbook
+            wb = load_workbook(io.BytesIO(content), read_only=True, data_only=True)
+            ws = wb.worksheets[0]
+            table = []
+            for row in ws.iter_rows(values_only=True):
+                table.append(["" if c is None else str(c) for c in row])
+            header_cells = table[0] if table else []
+            sample = [str(c) for r in table[1:5] for c in r]
+            col = _find_email_column([str(c) for c in header_cells], sample)
+            start = 1 if col is not None and col < len(header_cells) else 0
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail={"error": f"Could not read file: {e}"})
+
+    if not table:
+        return []
+
+    if col is None:
+        # No header found and no email-looking column → assume column 0.
+        col = 0
+        start = 0
+
+    for i in range(start, len(table)):
+        row = table[i]
+        if col >= len(row):
+            continue
+        value = str(row[col]).strip()
+        if not value:
+            continue
+        rows.append((i + 1, value))   # 1-based spreadsheet row number
+
+    return rows
+
+
+def _find_email_column(header_cells: list[str], sample_cells: list[str]) -> Optional[int]:
+    """Locate the email column index by header name, then by heuristic."""
+    # 1) Exact header match (case-insensitive, stripped).
+    for idx, cell in enumerate(header_cells):
+        if cell and cell.strip().lower() == BULK_EMAIL_COLUMN:
+            return idx
+    # 2) Loose header match (contains 'email', 'mail' or equals 'upn').
+    for idx, cell in enumerate(header_cells):
+        c = (cell or "").strip().lower()
+        if "email" in c or "mail" in c or c == "upn":
+            return idx
+    # 3) Heuristic: first header/column value that looks like an email.
+    for idx, cell in enumerate(header_cells):
+        if _is_emailish(cell):
+            return idx
+    return None
 
 
 # ========== MOCK DATA ==========
@@ -374,6 +511,17 @@ _cache_locks: dict[str, asyncio.Lock] = {}
 # Max simultaneous Graph requests — protects the tenant & the local process.
 GRAPH_CONCURRENCY = int(os.getenv("GRAPH_CONCURRENCY", "8"))
 _graph_semaphore = asyncio.Semaphore(GRAPH_CONCURRENCY)
+
+# ===== Bulk member upload configuration =====
+# .xlsx / .xlsm (openpyxl) and .csv are accepted. The email column header is
+# matched case-insensitively; if it isn't found we auto-detect the first column
+# that looks like it holds emails.
+BULK_ALLOWED_EXT = {".xlsx", ".xlsm", ".csv"}
+BULK_MAX_BYTES = int(os.getenv("BULK_MAX_BYTES", str(5 * 1024 * 1024)))   # 5 MB
+BULK_MAX_ROWS = int(os.getenv("BULK_MAX_ROWS", "1000"))                   # hard cap / upload
+BULK_ADD_CONCURRENCY = int(os.getenv("BULK_ADD_CONCURRENCY", "5"))        # parallel Graph writes
+BULK_EMAIL_COLUMN = os.getenv("BULK_EMAIL_COLUMN", "email").strip().lower()
+_bulk_semaphore = asyncio.Semaphore(BULK_ADD_CONCURRENCY)
 
 
 def cache_get(key: str, ttl: int):
@@ -717,10 +865,55 @@ async def _is_group_owner(group_id: str, user_id: str) -> bool:
 
 
 @app.get("/api/groups")
-async def list_groups():
-    """List all Microsoft 365 (Unified) groups."""
+async def list_groups(email: Optional[str] = None):
+    """List Microsoft 365 (Unified) groups.
+
+    - With no ``email`` (or a staff email): returns ALL groups (admin view).
+    - With a *student* email: returns ONLY groups the student is a member of,
+      so students cannot discover groups they are not part of.
+    """
     value = await _fetch_unified_groups()
+
+    if email:
+        role = get_role(email)
+        if role == "student":
+            value = await _groups_for_student(value, str(email).strip().lower())
+
     return {"value": value, "count": len(value), "total": len(value),
+            "timestamp": datetime.utcnow().isoformat()}
+
+
+async def _groups_for_student(all_groups: list[dict], student_email: str) -> list[dict]:
+    """Filter the group list to those the student belongs to (read-only view)."""
+    if not HAS_AZURE_CREDENTIALS:
+        uid = f"mock-user-{student_email.split('@')[0]}"
+        return [g for g in all_groups if uid in g.get("members", [])]
+
+    try:
+        user_id = await resolve_user_id_by_email(student_email)
+    except HTTPException:
+        return []
+
+    async def member_of(g: dict) -> bool:
+        try:
+            m = await call_graph_api(f"/groups/{g['id']}/members?$select=id")
+            return any(x.get("id") == user_id for x in m.get("value", []))
+        except HTTPException:
+            return False
+
+    flags = await asyncio.gather(*[member_of(g) for g in all_groups])
+    return [g for g, is_m in zip(all_groups, flags) if is_m]
+
+
+@app.get("/api/students/{email}/groups")
+async def list_student_groups(email: EmailStr):
+    """Student-only: the groups this student belongs to (read-only 'My Groups')."""
+    student_email = require_role(str(email), "student")
+    all_groups = await _fetch_unified_groups()
+    value = await _groups_for_student(all_groups, student_email)
+    for g in value:
+        g["isMember"] = True
+    return {"value": value, "count": len(value),
             "timestamp": datetime.utcnow().isoformat()}
 
 
@@ -916,33 +1109,28 @@ async def get_group_owners(group_id: str):
 
 @app.post("/api/groups/{group_id}/join")
 async def join_group(group_id: str, req: GroupActionRequest):
-    """Student-only: join a group as a member."""
-    student_email = require_role(str(req.email), "student")
-    user_id = await resolve_user_id_by_email(student_email)
+    """DISABLED: students can no longer self-join groups.
 
-    if HAS_AZURE_CREDENTIALS:
-        await call_graph_api(f"/groups/{group_id}/members/$ref", "POST", {
-            "@odata.id": f"https://graph.microsoft.com/v1.0/users/{user_id}"
-        })
-        log.info(f"AUDIT group_join id={group_id} by={student_email}")
-        return {"message": "Joined group successfully"}
-
-    for g in mock_groups:
-        if g["id"] == group_id:
-            g.setdefault("members", []).append(user_id)
-            log.info(f"AUDIT group_join (mock) id={group_id} by={student_email}")
-            return {"message": "Joined group successfully"}
-    raise HTTPException(status_code=404, detail="Group not found")
+    Membership is now a staff-driven, deliberate action (see the bulk upload
+    endpoint). We keep this route so the frontend receives a clear, actionable
+    message instead of a 404.
+    """
+    require_role(str(req.email), "student")  # still validate the caller's domain
+    raise HTTPException(status_code=403, detail={
+        "error": "Self-join is disabled",
+        "message": "Group membership is managed by staff. Ask a staff member to add you to this group.",
+    })
 
 
 @app.post("/api/groups/{group_id}/leave")
 async def leave_group(group_id: str, req: GroupActionRequest):
-    """Student-only: leave a group."""
+    """Student-only: leave a group (leaving is still permitted; joining is not)."""
     student_email = require_role(str(req.email), "student")
     user_id = await resolve_user_id_by_email(student_email)
 
     if HAS_AZURE_CREDENTIALS:
         await call_graph_api(f"/groups/{group_id}/members/{user_id}/$ref", "DELETE")
+        cache_invalidate("members:", f"members:{group_id}", "groups:", "studentgroups:")
         log.info(f"AUDIT group_leave id={group_id} by={student_email}")
         return {"message": "Left group successfully"}
 
@@ -958,27 +1146,48 @@ async def leave_group(group_id: str, req: GroupActionRequest):
 
 @app.post("/api/groups/{group_id}/members")
 async def add_group_member(group_id: str, body: dict = Body(...)):
-    """Staff-owner-only: add a member by userId or email."""
+    """Staff-owner-only: add a single member by email or userId.
+
+    Prefer the bulk endpoint for lists; this remains for one-off adds. Enforces
+    institutional domains (staff or student) and idempotency.
+    """
     email = body.get("email")
-    user_id = body.get("userId")
-    if not email and not user_id:
-        raise HTTPException(status_code=400, detail="email or userId is required")
+    member_email = body.get("memberEmail")
+    target_user_id = body.get("userId")
 
-    if email:
-        staff_email = require_role(str(email), "staff")
-        requester_id = await resolve_user_id_by_email(staff_email)
-    else:
-        requester_id = None
+    if not email:
+        raise HTTPException(status_code=400, detail="email (staff requester) is required")
+    if not member_email and not target_user_id:
+        raise HTTPException(status_code=400, detail="memberEmail or userId is required")
 
-    if requester_id and not await _is_group_owner(group_id, requester_id):
+    staff_email = require_role(str(email), "staff")
+    requester_id = await resolve_user_id_by_email(staff_email)
+    if not await _is_group_owner(group_id, requester_id):
         raise HTTPException(status_code=403, detail="Only a group owner may add members")
 
-    target_id = user_id or await resolve_user_id_by_email(body["memberEmail"])
+    if target_user_id:
+        target_id = str(target_user_id)
+    else:
+        normalized = str(member_email).strip().lower()
+        if get_role(normalized) is None:
+            raise HTTPException(status_code=400, detail={
+                "error": "Invalid member domain",
+                "message": "Member must be @students.ttu.ac.ke or @ttu.ac.ke",
+            })
+        target_id = await resolve_user_id_by_email(normalized)
 
     if HAS_AZURE_CREDENTIALS:
-        await call_graph_api(f"/groups/{group_id}/members/$ref", "POST", {
-            "@odata.id": f"https://graph.microsoft.com/v1.0/users/{target_id}"
-        })
+        try:
+            await call_graph_api(f"/groups/{group_id}/members/$ref", "POST", {
+                "@odata.id": f"https://graph.microsoft.com/v1.0/users/{target_id}"
+            })
+        except HTTPException as e:
+            if e.status_code in (400, 409) and "already exist" in str(e.detail).lower():
+                return {"message": "Member already in group", "status": "already_member"}
+            raise
+        cache_invalidate("members:", f"members:{group_id}", "groups:", "studentgroups:")
+
+    log.info(f"AUDIT group_member_add id={group_id} target={target_id} by={staff_email}")
     return {"message": "Member added to group successfully"}
 
 
@@ -995,6 +1204,228 @@ async def remove_group_member(group_id: str, member_id: str, email: Optional[str
     if HAS_AZURE_CREDENTIALS:
         await call_graph_api(f"/groups/{group_id}/members/{member_id}/$ref", "DELETE")
     return {"message": "Member removed successfully"}
+
+
+# ========== BULK MEMBER ADDITION (STAFF-ONLY, EXCEL/CSV) ==========
+def _csv_safe(value: Any) -> str:
+    """Neutralize spreadsheet formula injection in exported cells."""
+    s = "" if value is None else str(value)
+    if s[:1] in ("=", "+", "-", "@"):
+        return "'" + s
+    return s
+
+
+async def _bulk_add_one(group_id: str, row: int, email: str, existing_ids: set[str]) -> dict:
+    """Validate & add a single email. Returns a per-row result dict.
+
+    Order: domain check → directory lookup → already-member check → Graph add.
+    Never raises; failures become status values so the batch always completes.
+    """
+    normalized = email.strip().lower()
+
+    # 1) Domain: staff or student institutional domains only.
+    role = get_role(normalized)
+    if role is None:
+        return {"row": row, "email": email, "status": "invalid_domain"}
+
+    # 2) Resolve to a directory user id.
+    try:
+        user_id = await resolve_user_id_by_email(normalized)
+    except HTTPException as e:
+        if e.status_code == 404:
+            return {"row": row, "email": normalized, "status": "not_found"}
+        return {"row": row, "email": normalized, "status": "failed",
+                "error": f"lookup {e.status_code}: {e.detail}"}
+
+    # 3) Already a member?
+    if user_id in existing_ids:
+        return {"row": row, "email": normalized, "status": "already_member", "userId": user_id}
+
+    # 4) Mock mode short-circuit.
+    if not HAS_AZURE_CREDENTIALS:
+        existing_ids.add(user_id)
+        return {"row": row, "email": normalized, "status": "added",
+                "userId": user_id, "role": role}
+
+    # 5) Real Graph add (throttle-aware).
+    try:
+        async with _bulk_semaphore:
+            await graph_request_with_retry(
+                f"/groups/{group_id}/members/$ref",
+                "POST",
+                {"@odata.id": f"https://graph.microsoft.com/v1.0/users/{user_id}"},
+            )
+        existing_ids.add(user_id)
+        return {"row": row, "email": normalized, "status": "added",
+                "userId": user_id, "role": role}
+    except HTTPException as e:
+        # Graph returns 400/409 when the member already exists (race).
+        if e.status_code in (400, 409) and "already exist" in str(e.detail).lower():
+            return {"row": row, "email": normalized, "status": "already_member",
+                    "userId": user_id}
+        return {"row": row, "email": normalized, "status": "failed",
+                "userId": user_id, "error": f"graph {e.status_code}: {e.detail}"}
+    except Exception as e:
+        return {"row": row, "email": normalized, "status": "failed", "error": str(e)}
+
+
+@app.post("/api/staff/groups/{group_id}/members/bulk")
+async def bulk_add_members(
+    group_id: str,
+    file: UploadFile = File(...),
+    email: str = Form(...),
+):
+    """Staff-owner-only: add members to a group in bulk from .xlsx/.xlsm/.csv.
+
+    - Only staff may call this; only a group *owner* may modify the group.
+    - Each row is validated (domain → existence → not-already-member) and added
+      via Graph with bounded concurrency + throttle-aware retries.
+    - Returns a per-row report plus a summary. Idempotent: safe to re-run.
+    """
+    # ---- 1) Authorization (fail fast, before touching the file) ----
+    staff_email = require_role(email, "staff")
+    requester_id = await resolve_user_id_by_email(staff_email)
+    if not await _is_group_owner(group_id, requester_id):
+        raise HTTPException(status_code=403, detail="Only a group owner may add members")
+
+    # ---- 2) Read & guard the upload ----
+    content = await file.read()
+    if len(content) == 0:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty")
+    if len(content) > BULK_MAX_BYTES:
+        raise HTTPException(status_code=413, detail={
+            "error": "File too large", "maxBytes": BULK_MAX_BYTES, "receivedBytes": len(content),
+        })
+
+    # ---- 3) Parse ----
+    parsed = parse_emails_from_upload(file.filename or "", content)
+    if not parsed:
+        raise HTTPException(status_code=400, detail={
+            "error": "No email rows found", "hint": f"Expected a '${BULK_EMAIL_COLUMN}' column.",
+        })
+
+    # ---- 4) Row cap: process first N, report the rest ----
+    skipped_over_cap = 0
+    if len(parsed) > BULK_MAX_ROWS:
+        skipped_over_cap = len(parsed) - BULK_MAX_ROWS
+        parsed = parsed[:BULK_MAX_ROWS]
+
+    # ---- 5) De-duplicate (keep first occurrence) ----
+    seen: dict[str, int] = {}
+    unique_rows: list[tuple[int, str]] = []
+    dup_rows: list[tuple[int, str]] = []
+    for row_no, raw in parsed:
+        key = raw.strip().lower()
+        if key in seen:
+            dup_rows.append((row_no, raw))
+        else:
+            seen[key] = row_no
+            unique_rows.append((row_no, raw))
+
+    # ---- 6) Snapshot current members (for idempotency) ----
+    existing_ids: set[str] = set()
+    if HAS_AZURE_CREDENTIALS:
+        try:
+            members = await call_graph_api(f"/groups/{group_id}/members?$select=id")
+            existing_ids = {m.get("id") for m in members.get("value", [])}
+        except HTTPException:
+            existing_ids = set()
+    else:
+        for g in mock_groups:
+            if g["id"] == group_id:
+                existing_ids = set(g.get("members", []))
+
+    # ---- 7) Process with bounded parallelism ----
+    tasks = [_bulk_add_one(group_id, row_no, raw, existing_ids)
+             for row_no, raw in unique_rows]
+    results = await asyncio.gather(*tasks) if tasks else []
+    results.extend({"row": r, "email": e, "status": "duplicate"} for r, e in dup_rows)
+    results.sort(key=lambda x: x["row"])
+
+    # ---- 8) Invalidate caches that may hold stale membership ----
+    cache_invalidate("members:", f"members:{group_id}", "groups:", "studentgroups:")
+
+    # ---- 9) Summarize ----
+    def _count(status: str) -> int:
+        return sum(1 for r in results if r["status"] == status)
+
+    summary = {
+        "fileName": file.filename,
+        "totalRows": len(parsed),
+        "uniqueEmails": len(unique_rows),
+        "added": _count("added"),
+        "alreadyMember": _count("already_member"),
+        "invalidDomain": _count("invalid_domain"),
+        "notFound": _count("not_found"),
+        "duplicatesInFile": len(dup_rows),
+        "failed": _count("failed"),
+        "skippedOverCap": skipped_over_cap,
+    }
+
+    # ---- 10) Audit + respond ----
+    log.info(
+        f"AUDIT bulk_member_add group={group_id} by={staff_email} "
+        f"file='{file.filename}' added={summary['added']} "
+        f"already={summary['alreadyMember']} failed={summary['failed']} "
+        f"invalid={summary['invalidDomain']} notfound={summary['notFound']}"
+    )
+    return {
+        "group": {"id": group_id},
+        "requestedBy": staff_email,
+        "summary": summary,
+        "results": results,
+        "timestamp": datetime.utcnow().isoformat(),
+    }
+
+
+@app.post("/api/staff/groups/{group_id}/members/bulk/report")
+async def bulk_add_members_report(
+    group_id: str,
+    file: UploadFile = File(...),
+    email: str = Form(...),
+):
+    """Same as /bulk but streams the report back as a CSV file download."""
+    report = await bulk_add_members(group_id=group_id, file=file, email=email)
+
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(["Row", "Email", "Status", "UserId", "Detail"])
+    for r in report["results"]:
+        writer.writerow([
+            _csv_safe(r.get("row")),
+            _csv_safe(r.get("email")),
+            _csv_safe(r.get("status")),
+            _csv_safe(r.get("userId", "")),
+            _csv_safe(r.get("error", "")),
+        ])
+    buf.seek(0)
+    fname = f"member-upload-report-{group_id[:8]}.csv"
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{fname}"'},
+    )
+
+
+@app.get("/api/staff/groups/members/template")
+async def bulk_members_template():
+    """Download a ready-to-fill .xlsx template for the bulk upload."""
+    from openpyxl import Workbook
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Members"
+    ws.append(["email", "name (ignored)"])
+    ws.append(["student1@students.ttu.ac.ke", "Example Student"])
+    ws.append(["staff1@ttu.ac.ke", "Example Staff"])
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="bulk-members-template.xlsx"'},
+    )
 
 
 # ========== LICENSES ==========

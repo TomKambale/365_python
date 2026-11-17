@@ -157,6 +157,34 @@
         .add-member-row { display: flex; gap: 0.5rem; margin-top: 0.9rem; flex-wrap: wrap; }
         .add-member-row input { flex: 1; min-width: 220px; padding: 0.6rem 0.9rem; border: 2px solid var(--neutral-300); border-radius: var(--border-radius-md); font-size: 0.9rem; font-family: inherit; }
 
+        /* ===== Bulk upload panel ===== */
+        .bulk-panel { margin-top: 1.2rem; padding: 1.1rem 1.2rem; border: 1px dashed var(--primary-200); background: var(--primary-50); border-radius: var(--border-radius-lg); }
+        .bulk-panel h4 { font-size: 0.95rem; font-weight: 700; color: var(--primary-700); display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; }
+        .bulk-panel .bulk-help { font-size: 0.8rem; color: var(--neutral-600); margin-bottom: 0.8rem; }
+        .bulk-panel .bulk-help a { color: var(--primary-600); font-weight: 600; text-decoration: underline; }
+        .bulk-drop { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+        .bulk-drop input[type="file"] { font-size: 0.85rem; }
+        .bulk-file { font-size: 0.82rem; color: var(--neutral-600); }
+        .bulk-summary { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.9rem 0 0.6rem; }
+        .stat-pill { font-size: 0.78rem; font-weight: 600; padding: 0.3rem 0.7rem; border-radius: var(--border-radius-full); border: 1px solid var(--neutral-300); background: white; }
+        .stat-pill.ok { background: var(--success-50); border-color: var(--success-500); color: var(--success-700); }
+        .stat-pill.warn { background: var(--warning-50); border-color: var(--warning-500); color: var(--warning-700); }
+        .stat-pill.err { background: var(--danger-50); border-color: var(--danger-500); color: var(--danger-700); }
+        .stat-pill.info { background: var(--info-50); border-color: var(--info-500); color: var(--info-500); }
+        .result-table-wrap { max-height: 320px; overflow-y: auto; border: 1px solid var(--neutral-200); border-radius: var(--border-radius-md); }
+        table.result-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+        table.result-table th, table.result-table td { padding: 0.5rem 0.7rem; text-align: left; border-bottom: 1px solid var(--neutral-200); }
+        table.result-table thead th { position: sticky; top: 0; background: var(--neutral-100); font-weight: 700; z-index: 1; }
+        table.result-table tbody tr:last-child td { border-bottom: none; }
+        .status-tag { font-size: 0.72rem; font-weight: 700; padding: 0.15rem 0.55rem; border-radius: var(--border-radius-full); text-transform: uppercase; letter-spacing: 0.3px; }
+        .status-added { background: var(--success-50); color: var(--success-700); }
+        .status-already_member { background: var(--info-50); color: var(--info-500); }
+        .status-invalid_domain { background: var(--warning-50); color: var(--warning-700); }
+        .status-not_found { background: var(--warning-50); color: var(--warning-700); }
+        .status-duplicate { background: var(--neutral-200); color: var(--neutral-700); }
+        .status-failed { background: var(--danger-50); color: var(--danger-700); }
+
+
         .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--neutral-500); }
         .empty-state i { font-size: 2.5rem; color: var(--neutral-300); margin-bottom: 0.75rem; display: block; }
 
@@ -218,8 +246,8 @@
             <h2>Verify Your Email</h2>
             <p>Enter your TTU Microsoft 365 email to continue.</p>
             <div class="alert alert-info">
-                <strong>Staff</strong> (@ttu.ac.ke) can create, manage and delete groups.
-                <strong>Students</strong> (@students.ttu.ac.ke) can join and leave groups.
+                <strong>Staff</strong> (@ttu.ac.ke) can create and manage groups, and add members in bulk.
+                <strong>Students</strong> (@students.ttu.ac.ke) can view and leave the groups they belong to.
             </div>
             <form id="verifyForm">
                 <div class="verify-row">
@@ -272,8 +300,11 @@
         <section id="studentDashboard" class="hidden">
             <div class="card">
                 <div class="section-title-row">
-                    <h2><i class="fas fa-layer-group" style="color:var(--primary-500);"></i> Available Groups</h2>
+                    <h2><i class="fas fa-layer-group" style="color:var(--primary-500);"></i> My Groups</h2>
                     <button class="btn btn-secondary btn-sm" onclick="loadStudentGroups()"><i class="fas fa-rotate"></i> Refresh</button>
+                </div>
+                <div class="alert alert-info" style="margin-bottom:1.2rem;">
+                    You can see the groups you've been added to. Membership is managed by staff.
                 </div>
                 <div class="group-list" id="studentGroupList"></div>
             </div>
@@ -450,6 +481,22 @@
                             <input type="email" id="addmember-${esc(g.id)}" placeholder="student@students.ttu.ac.ke or staff@ttu.ac.ke">
                             <button class="btn btn-primary btn-sm" onclick="addMember('${esc(g.id)}')"><i class="fas fa-user-plus"></i> Add</button>
                         </div>
+
+                        <div class="bulk-panel">
+                            <h4><i class="fas fa-file-arrow-up"></i> Add Members in Bulk</h4>
+                            <div class="bulk-help">
+                                Upload a <strong>.xlsx</strong>, <strong>.xlsm</strong> or <strong>.csv</strong> with one email per row under an <code>email</code> column.
+                                <a href="${API_BASE_URL}/staff/groups/members/template" target="_blank" rel="noopener"><i class="fas fa-download"></i> Download template</a>
+                            </div>
+                            <div class="bulk-drop">
+                                <input type="file" id="bulkfile-${esc(g.id)}" accept=".xlsx,.xlsm,.csv">
+                                <button class="btn btn-primary btn-sm" id="bulkbtn-${esc(g.id)}" onclick="bulkUpload('${esc(g.id)}')">
+                                    <i class="fas fa-upload"></i> Upload &amp; Add
+                                </button>
+                                <span class="bulk-file" id="bulkfile-name-${esc(g.id)}"></span>
+                            </div>
+                            <div id="bulk-result-${esc(g.id)}"></div>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -516,6 +563,119 @@
             }
         }
 
+        // ========== STAFF: BULK UPLOAD ==========
+        const STATUS_LABELS = {
+            added: 'Added',
+            already_member: 'Already member',
+            invalid_domain: 'Invalid domain',
+            not_found: 'Not found',
+            duplicate: 'Duplicate',
+            failed: 'Failed',
+        };
+
+        function renderBulkResult(groupId, report) {
+            const el = document.getElementById(`bulk-result-${groupId}`);
+            if (!el) return;
+            const s = report.summary || {};
+            const rows = report.results || [];
+            const tableRows = rows.map(r => `
+                <tr>
+                    <td>${esc(r.row)}</td>
+                    <td>${esc(r.email)}</td>
+                    <td><span class="status-tag status-${esc(r.status)}">${esc(STATUS_LABELS[r.status] || r.status)}</span></td>
+                    <td>${esc(r.error || r.userId || '')}</td>
+                </tr>`).join('');
+            el.innerHTML = `
+                <div class="bulk-summary">
+                    <span class="stat-pill ok"><i class="fas fa-circle-check"></i> Added: ${esc(s.added ?? 0)}</span>
+                    <span class="stat-pill info">Already member: ${esc(s.alreadyMember ?? 0)}</span>
+                    <span class="stat-pill warn">Invalid domain: ${esc(s.invalidDomain ?? 0)}</span>
+                    <span class="stat-pill warn">Not found: ${esc(s.notFound ?? 0)}</span>
+                    <span class="stat-pill">Duplicates: ${esc(s.duplicatesInFile ?? 0)}</span>
+                    <span class="stat-pill err">Failed: ${esc(s.failed ?? 0)}</span>
+                    ${s.skippedOverCap ? `<span class="stat-pill err">Skipped (over cap): ${esc(s.skippedOverCap)}</span>` : ''}
+                </div>
+                <div class="result-table-wrap">
+                    <table class="result-table">
+                        <thead><tr><th>Row</th><th>Email</th><th>Status</th><th>Detail</th></tr></thead>
+                        <tbody>${tableRows || '<tr><td colspan="4">No rows.</td></tr>'}</tbody>
+                    </table>
+                </div>
+                <div style="margin-top:0.8rem;">
+                    <button class="btn btn-secondary btn-sm" onclick="downloadBulkReport('${esc(groupId)}')">
+                        <i class="fas fa-download"></i> Download report (CSV)
+                    </button>
+                </div>`;
+            el._lastReport = report;
+
+            // Reset the file input so the same file can be re-uploaded if needed.
+            const fileInput = document.getElementById(`bulkfile-${groupId}`);
+            if (fileInput) fileInput.value = '';
+            const nameSpan = document.getElementById(`bulkfile-name-${groupId}`);
+            if (nameSpan) nameSpan.textContent = '';
+        }
+
+        async function bulkUpload(groupId) {
+            const fileInput = document.getElementById(`bulkfile-${groupId}`);
+            const btn = document.getElementById(`bulkbtn-${groupId}`);
+            const file = fileInput && fileInput.files && fileInput.files[0];
+            if (!file) { showToast('Choose a .xlsx, .xlsm or .csv file first.', 'error'); return; }
+
+            const original = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Uploading…';
+            try {
+                const fd = new FormData();
+                fd.append('file', file);
+                fd.append('email', currentEmail);
+
+                const res = await fetch(`${API_BASE_URL}/staff/groups/${encodeURIComponent(groupId)}/members/bulk`, {
+                    method: 'POST',
+                    body: fd,
+                });
+                let data = null;
+                try { data = await res.json(); } catch (e) { data = {}; }
+                if (!res.ok) {
+                    const detail = data.detail;
+                    const msg = (detail && (detail.error || (typeof detail === 'string' ? detail : JSON.stringify(detail))))
+                                || `Upload failed (${res.status})`;
+                    throw new Error(msg);
+                }
+                renderBulkResult(groupId, data);
+                showToast(`Added ${data.summary.added} of ${data.summary.uniqueEmails} unique emails.`, 'success');
+                loadMembers(groupId);
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = original;
+            }
+        }
+
+        function downloadBulkReport(groupId) {
+            const el = document.getElementById(`bulk-result-${groupId}`);
+            const report = el && el._lastReport;
+            if (!report) { showToast('No report to download yet.', 'error'); return; }
+            const header = ['Row', 'Email', 'Status', 'UserId', 'Detail'];
+            const lines = [header.join(',')];
+            const safe = v => {
+                const s = (v == null ? '' : String(v)).replace(/"/g, '""');
+                return /[",\n]/.test(s) ? `"${(/^[=+\-@]/.test(s) ? "'" + s : s)}"` : s;
+            };
+            (report.results || []).forEach(r => {
+                lines.push([r.row, r.email, r.status, r.userId || '', r.error || ''].map(safe).join(','));
+            });
+            const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `member-upload-report-${groupId.slice(0, 8)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
         async function removeMember(groupId, memberId) {
             if (!confirm('Remove this member from the group?')) return;
             try {
@@ -529,40 +689,25 @@
             }
         }
 
-        // ========== STUDENT: LOAD GROUPS ==========
+        // ========== STUDENT: LOAD MY GROUPS (READ-ONLY) ==========
         async function loadStudentGroups() {
             const list = document.getElementById('studentGroupList');
             list.innerHTML = '<div class="empty-state"><span class="spinner" style="border-top-color:var(--primary-500);border-color:var(--neutral-300);"></span></div>';
             try {
-                const data = await api('/groups');
-                const groups = data.value || [];
-                // Determine membership for each group
-                const membership = {};
-                await Promise.all(groups.map(async (g) => {
-                    try {
-                        const m = await api(`/groups/${encodeURIComponent(g.id)}/members`);
-                        membership[g.id] = (m.value || []).some(x =>
-                            (x.userPrincipalName || '').toLowerCase() === currentEmail.toLowerCase()
-                        );
-                    } catch (e) {
-                        membership[g.id] = false;
-                    }
-                }));
-                renderStudentGroups(groups, membership);
+                const data = await api(`/students/${encodeURIComponent(currentEmail)}/groups`);
+                renderStudentGroups(data.value || []);
             } catch (err) {
                 list.innerHTML = `<div class="empty-state"><i class="fas fa-triangle-exclamation"></i>${esc(err.message)}</div>`;
             }
         }
 
-        function renderStudentGroups(groups, membership) {
+        function renderStudentGroups(groups) {
             const list = document.getElementById('studentGroupList');
             if (!groups.length) {
-                list.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i>No groups are available yet. Check back later.</div>';
+                list.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i>You are not a member of any group yet. Your lecturer or staff will add you to the relevant groups.</div>';
                 return;
             }
-            list.innerHTML = groups.map(g => {
-                const joined = membership[g.id];
-                return `
+            list.innerHTML = groups.map(g => `
                 <div class="group-item">
                     <div class="group-item-top">
                         <div>
@@ -570,33 +715,18 @@
                             <div class="group-desc">${esc(g.description || 'No description')}</div>
                             <div class="group-meta">
                                 <span><i class="fas fa-envelope"></i> ${esc(g.mail || '—')}</span>
-                                ${joined ? '<span style="color:var(--success-500);font-weight:600;"><i class="fas fa-circle-check"></i> Joined</span>' : ''}
+                                <span style="color:var(--success-500);font-weight:600;"><i class="fas fa-circle-check"></i> Member</span>
                             </div>
                         </div>
                         <div class="group-actions">
-                            ${joined
-                                ? `<button class="btn btn-secondary btn-sm" onclick="leaveGroup('${esc(g.id)}')"><i class="fas fa-right-from-bracket"></i> Leave</button>`
-                                : `<button class="btn btn-primary btn-sm" onclick="joinGroup('${esc(g.id)}')"><i class="fas fa-right-to-bracket"></i> Join</button>`}
+                            <button class="btn btn-secondary btn-sm" onclick="leaveGroup('${esc(g.id)}')"><i class="fas fa-right-from-bracket"></i> Leave</button>
                         </div>
                     </div>
-                </div>`;
-            }).join('');
-        }
-
-        async function joinGroup(groupId) {
-            try {
-                await api(`/groups/${encodeURIComponent(groupId)}/join`, {
-                    method: 'POST',
-                    body: JSON.stringify({ email: currentEmail })
-                });
-                showToast('Joined group.', 'success');
-                loadStudentGroups();
-            } catch (err) {
-                showToast(err.message, 'error');
-            }
+                </div>`).join('');
         }
 
         async function leaveGroup(groupId) {
+            if (!confirm('Leave this group? You can only rejoin if a staff member adds you again.')) return;
             try {
                 await api(`/groups/${encodeURIComponent(groupId)}/leave`, {
                     method: 'POST',
@@ -611,6 +741,17 @@
 
         // ========== INIT ==========
         document.addEventListener('DOMContentLoaded', () => {
+            // Show the chosen bulk-file name as soon as it's picked (delegated,
+            // since bulk panels are re-rendered with each group list refresh).
+            document.addEventListener('change', (e) => {
+                const t = e.target;
+                if (t && t.type === 'file' && t.id && t.id.startsWith('bulkfile-')) {
+                    const groupId = t.id.slice('bulkfile-'.length);
+                    const nameSpan = document.getElementById(`bulkfile-name-${groupId}`);
+                    if (nameSpan) nameSpan.textContent = (t.files && t.files[0]) ? t.files[0].name : '';
+                }
+            });
+
             const savedEmail = sessionStorage.getItem('ttuEmail');
             const savedRole = sessionStorage.getItem('ttuRole');
             if (savedEmail && savedRole) {

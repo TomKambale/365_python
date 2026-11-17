@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTU Microsoft 365 · Group Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-50: #e8f5e8;
+            --primary-100: #c0e0c0;
+            --primary-200: #98cb98;
+            --primary-300: #70b670;
+            --primary-400: #48a148;
+            --primary-500: #228B22;
+            --primary-600: #1b721b;
+            --primary-700: #145914;
+            --primary-800: #0d400d;
+            --primary-900: #062706;
+
+            --accent-50: #fbf5e6;
+            --accent-100: #f5e3b8;
+            --accent-500: #D4AF37;
+            --accent-700: #9c7a1d;
+
+            --neutral-50: #fafbfc;
+            --neutral-100: #f4f7fa;
+            --neutral-200: #e9ecf0;
+            --neutral-300: #dee2e8;
+            --neutral-400: #ced3db;
+            --neutral-500: #a0a8b7;
+            --neutral-600: #6c757d;
+            --neutral-700: #495057;
+            --neutral-800: #343a40;
+            --neutral-900: #222222;
+
+            --success-50: #e8f2e8;
+            --success-500: #375623;
+            --success-700: #2a441a;
+
+            --warning-50: #fff2e6;
+            --warning-500: #C55A11;
+            --warning-700: #9e480e;
+
+            --danger-50: #ffe8e8;
+            --danger-100: #ffd1d1;
+            --danger-500: #dc3545;
+            --danger-700: #b02a37;
+
+            --info-50: #e6f2ff;
+            --info-500: #0d6efd;
+
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+            --border-radius-sm: 0.375rem;
+            --border-radius-md: 0.5rem;
+            --border-radius-lg: 0.75rem;
+            --border-radius-xl: 1rem;
+            --border-radius-2xl: 1.5rem;
+            --border-radius-full: 9999px;
+
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            --transition-base: all 0.2s ease-in-out;
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --header-height: 70px;
+            --container-padding: 2rem;
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font-family);
+            background-color: var(--neutral-100);
+            color: var(--neutral-900);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+        a { text-decoration: none; color: inherit; }
+        ul { list-style: none; }
+        button { font-family: inherit; cursor: pointer; border: none; background: none; }
+
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem;
+            padding: 0.75rem 1.8rem; border-radius: var(--border-radius-full);
+            font-weight: 600; font-size: 0.95rem; transition: var(--transition-smooth);
+            border: 2px solid transparent; white-space: nowrap;
+        }
+        .btn-primary { background: var(--primary-500); color: white; box-shadow: 0 4px 12px rgba(34, 139, 34, 0.3); }
+        .btn-primary:hover:not(:disabled) { background: var(--primary-600); box-shadow: 0 8px 20px rgba(34, 139, 34, 0.4); transform: translateY(-2px); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; transform: none; }
+        .btn-secondary { background: white; color: var(--neutral-700); border: 2px solid var(--neutral-300); }
+        .btn-secondary:hover { background: var(--neutral-50); border-color: var(--neutral-400); transform: translateY(-2px); }
+        .btn-danger { background: var(--danger-500); color: white; }
+        .btn-danger:hover { background: var(--danger-700); transform: translateY(-2px); }
+        .btn-sm { padding: 0.5rem 1.1rem; font-size: 0.85rem; }
+
+        .navbar { background: white; box-shadow: var(--shadow-sm); position: sticky; top: 0; z-index: 1000; height: var(--header-height); display: flex; align-items: center; }
+        .nav-container { max-width: 1280px; margin: 0 auto; padding: 0 var(--container-padding); display: flex; align-items: center; justify-content: space-between; width: 100%; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; }
+        .logo-icon { width: 42px; height: 42px; background: var(--primary-500); border-radius: var(--border-radius-md); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.3rem; }
+        .logo-text { font-weight: 700; font-size: 1.4rem; color: var(--neutral-900); letter-spacing: -0.5px; }
+        .logo-text span { color: var(--primary-500); }
+        .nav-user { display: flex; align-items: center; gap: 1rem; font-size: 0.9rem; }
+        .nav-user .email-chip { background: var(--primary-50); color: var(--primary-700); padding: 0.4rem 0.9rem; border-radius: var(--border-radius-full); font-weight: 600; display: none; }
+        .nav-user .email-chip.show { display: inline-block; }
+        .role-badge { padding: 0.2rem 0.7rem; border-radius: var(--border-radius-full); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+        .role-staff { background: var(--accent-50); color: var(--accent-700); }
+        .role-student { background: var(--info-50); color: var(--info-500); }
+
+        .main-content { max-width: 1100px; margin: 0 auto; padding: 0 var(--container-padding) 3rem; }
+
+        .portal-header { text-align: center; padding: 2.5rem 0 1.5rem; }
+        .portal-header h1 { font-size: 2.2rem; font-weight: 700; color: var(--primary-700); letter-spacing: -0.5px; }
+        .portal-header .subtitle { color: var(--neutral-600); font-size: 1rem; margin-top: 0.25rem; }
+
+        .card { background: white; border-radius: var(--border-radius-xl); padding: 2rem 2.2rem; box-shadow: var(--shadow-md); border: 1px solid var(--neutral-200); margin-bottom: 1.5rem; }
+        .card h2 { font-size: 1.5rem; font-weight: 700; color: var(--neutral-900); margin-bottom: 0.4rem; }
+        .card > p { color: var(--neutral-600); margin-bottom: 1.5rem; }
+
+        .alert { padding: 1rem 1.2rem; border-radius: var(--border-radius-md); margin-bottom: 1.5rem; font-size: 0.9rem; line-height: 1.6; border-left: 4px solid transparent; }
+        .alert-info { background: var(--info-50); border-left-color: var(--info-500); color: var(--neutral-800); }
+        .alert-success { background: var(--success-50); border-left-color: var(--success-500); color: var(--success-700); }
+        .alert-error { background: var(--danger-50); border-left-color: var(--danger-500); color: var(--danger-700); }
+        .alert-warning { background: var(--warning-50); border-left-color: var(--warning-500); color: var(--warning-700); }
+
+        .form-group { margin-bottom: 1.2rem; }
+        .form-group label { display: block; font-weight: 600; font-size: 0.9rem; color: var(--neutral-800); margin-bottom: 0.4rem; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--neutral-300);
+            border-radius: var(--border-radius-md); font-size: 0.95rem; font-family: inherit;
+            transition: var(--transition-base); background: white; color: var(--neutral-900);
+        }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--primary-500); box-shadow: 0 0 0 4px rgba(34,139,34,0.1); }
+        .form-group small { display: block; font-size: 0.8rem; color: var(--neutral-500); margin-top: 0.3rem; }
+
+        .verify-row { display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; }
+        .verify-row .form-group { flex: 1; min-width: 260px; margin-bottom: 0; }
+
+        .group-list { display: grid; gap: 1rem; }
+        .group-item { border: 1px solid var(--neutral-200); border-radius: var(--border-radius-lg); padding: 1.3rem 1.5rem; transition: var(--transition-smooth); }
+        .group-item:hover { border-color: var(--primary-200); box-shadow: var(--shadow-sm); }
+        .group-item-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+        .group-item h3 { font-size: 1.15rem; font-weight: 700; color: var(--neutral-900); }
+        .group-item .group-desc { color: var(--neutral-600); font-size: 0.9rem; margin-top: 0.25rem; }
+        .group-item .group-meta { font-size: 0.78rem; color: var(--neutral-500); margin-top: 0.4rem; display: flex; gap: 1rem; flex-wrap: wrap; }
+        .group-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+        .members-panel { margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--neutral-300); display: none; }
+        .members-panel.show { display: block; }
+        .member-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+        .member-chip { background: var(--neutral-100); border: 1px solid var(--neutral-300); border-radius: var(--border-radius-full); padding: 0.3rem 0.3rem 0.3rem 0.9rem; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .member-chip button { color: var(--danger-500); font-size: 0.9rem; padding: 0 0.3rem; }
+        .add-member-row { display: flex; gap: 0.5rem; margin-top: 0.9rem; flex-wrap: wrap; }
+        .add-member-row input { flex: 1; min-width: 220px; padding: 0.6rem 0.9rem; border: 2px solid var(--neutral-300); border-radius: var(--border-radius-md); font-size: 0.9rem; font-family: inherit; }
+
+        /* ===== Bulk upload panel ===== */
+        .bulk-panel { margin-top: 1.2rem; padding: 1.1rem 1.2rem; border: 1px dashed var(--primary-200); background: var(--primary-50); border-radius: var(--border-radius-lg); }
+        .bulk-panel h4 { font-size: 0.95rem; font-weight: 700; color: var(--primary-700); display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; }
+        .bulk-panel .bulk-help { font-size: 0.8rem; color: var(--neutral-600); margin-bottom: 0.8rem; }
+        .bulk-panel .bulk-help a { color: var(--primary-600); font-weight: 600; text-decoration: underline; }
+        .bulk-drop { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+        .bulk-drop input[type="file"] { font-size: 0.85rem; }
+        .bulk-file { font-size: 0.82rem; color: var(--neutral-600); }
+        .bulk-summary { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.9rem 0 0.6rem; }
+        .stat-pill { font-size: 0.78rem; font-weight: 600; padding: 0.3rem 0.7rem; border-radius: var(--border-radius-full); border: 1px solid var(--neutral-300); background: white; }
+        .stat-pill.ok { background: var(--success-50); border-color: var(--success-500); color: var(--success-700); }
+        .stat-pill.warn { background: var(--warning-50); border-color: var(--warning-500); color: var(--warning-700); }
+        .stat-pill.err { background: var(--danger-50); border-color: var(--danger-500); color: var(--danger-700); }
+        .stat-pill.info { background: var(--info-50); border-color: var(--info-500); color: var(--info-500); }
+        .result-table-wrap { max-height: 320px; overflow-y: auto; border: 1px solid var(--neutral-200); border-radius: var(--border-radius-md); }
+        table.result-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+        table.result-table th, table.result-table td { padding: 0.5rem 0.7rem; text-align: left; border-bottom: 1px solid var(--neutral-200); }
+        table.result-table thead th { position: sticky; top: 0; background: var(--neutral-100); font-weight: 700; z-index: 1; }
+        table.result-table tbody tr:last-child td { border-bottom: none; }
+        .status-tag { font-size: 0.72rem; font-weight: 700; padding: 0.15rem 0.55rem; border-radius: var(--border-radius-full); text-transform: uppercase; letter-spacing: 0.3px; }
+        .status-added { background: var(--success-50); color: var(--success-700); }
+        .status-already_member { background: var(--info-50); color: var(--info-500); }
+        .status-invalid_domain { background: var(--warning-50); color: var(--warning-700); }
+        .status-not_found { background: var(--warning-50); color: var(--warning-700); }
+        .status-duplicate { background: var(--neutral-200); color: var(--neutral-700); }
+        .status-failed { background: var(--danger-50); color: var(--danger-700); }
+
+
+        .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--neutral-500); }
+        .empty-state i { font-size: 2.5rem; color: var(--neutral-300); margin-bottom: 0.75rem; display: block; }
+
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .toast {
+            position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 3000;
+            background: var(--neutral-900); color: white; padding: 1rem 1.4rem;
+            border-radius: var(--border-radius-md); box-shadow: var(--shadow-xl);
+            font-size: 0.9rem; opacity: 0; transform: translateY(20px);
+            transition: var(--transition-smooth); max-width: 360px;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { background: var(--success-500); }
+        .toast.error { background: var(--danger-500); }
+
+        .hidden { display: none !important; }
+
+        .section-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; gap: 1rem; flex-wrap: wrap; }
+        .section-title-row h2 { font-size: 1.3rem; font-weight: 700; }
+
+        @media (max-width: 768px) {
+            :root { --container-padding: 1rem; }
+            .portal-header h1 { font-size: 1.7rem; }
+            .card { padding: 1.5rem; }
+            .group-item-top { flex-direction: column; }
+            .group-actions { width: 100%; }
+            .group-actions .btn { flex: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <div class="logo-icon"><i class="fas fa-users-rectangle"></i></div>
+                <div class="logo-text">TTU<span>Groups</span></div>
+            </div>
+            <div class="nav-user">
+                <span class="email-chip" id="navEmail"></span>
+                <span class="role-badge" id="navRole" style="display:none;"></span>
+                <button class="btn btn-secondary btn-sm" id="logoutBtn" style="display:none;" onclick="logout()">
+                    <i class="fas fa-right-from-bracket"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="portal-header">
+            <h1>Microsoft 365 Group Management</h1>
+            <p class="subtitle">For students and staff of Taita Taveta University</p>
+        </header>
+
+        <!-- ========== VERIFICATION CARD ========== -->
+        <section class="card" id="verifyCard">
+            <h2>Verify Your Email</h2>
+            <p>Enter your TTU Microsoft 365 email to continue.</p>
+            <div class="alert alert-info">
+                <strong>Staff</strong> (@ttu.ac.ke) can create and manage groups, and add members in bulk.
+                <strong>Students</strong> (@students.ttu.ac.ke) can view and leave the groups they belong to.
+            </div>
+            <form id="verifyForm">
+                <div class="verify-row">
+                    <div class="form-group">
+                        <label for="verifyEmail">Institutional Email</label>
+                        <input type="email" id="verifyEmail" placeholder="yourname@ttu.ac.ke" required autocomplete="email">
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="verifyBtn" style="margin-bottom:0;">
+                        <i class="fas fa-circle-check"></i> Verify
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- ========== STAFF DASHBOARD ========== -->
+        <section id="staffDashboard" class="hidden">
+            <div class="card">
+                <h2>Create a New Group</h2>
+                <p>A Microsoft 365 group will be created with you as its owner.</p>
+                <form id="createGroupForm">
+                    <div class="form-group">
+                        <label for="groupName">Group Name *</label>
+                        <input type="text" id="groupName" placeholder="e.g. Computer Science 2026" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="groupDesc">Description</label>
+                        <textarea id="groupDesc" placeholder="What is this group for?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="groupNick">Mail Nickname</label>
+                        <input type="text" id="groupNick" placeholder="e.g. cs2026 (auto-generated if blank)">
+                        <small>The email alias prefix (no spaces). Letters and numbers only.</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="createBtn">
+                        <i class="fas fa-plus"></i> Create Group
+                    </button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="section-title-row">
+                    <h2><i class="fas fa-crown" style="color:var(--accent-500);"></i> My Groups</h2>
+                    <button class="btn btn-secondary btn-sm" onclick="loadStaffGroups()"><i class="fas fa-rotate"></i> Refresh</button>
+                </div>
+                <div class="group-list" id="staffGroupList"></div>
+            </div>
+        </section>
+
+        <!-- ========== STUDENT DASHBOARD ========== -->
+        <section id="studentDashboard" class="hidden">
+            <div class="card">
+                <div class="section-title-row">
+                    <h2><i class="fas fa-layer-group" style="color:var(--primary-500);"></i> My Groups</h2>
+                    <button class="btn btn-secondary btn-sm" onclick="loadStudentGroups()"><i class="fas fa-rotate"></i> Refresh</button>
+                </div>
+                <div class="alert alert-info" style="margin-bottom:1.2rem;">
+                    You can see the groups you've been added to. Membership is managed by staff.
+                </div>
+                <div class="group-list" id="studentGroupList"></div>
+            </div>
+        </section>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ========== CONFIG ==========
+        const API_BASE_URL = 'http://127.0.0.1:5000/api';
+
+        // ========== STATE ==========
+        let currentEmail = '';
+        let currentRole = '';
+
+        // ========== UTILITIES ==========
+        function showToast(message, type = 'success') {
+            const t = document.getElementById('toast');
+            t.textContent = message;
+            t.className = 'toast show ' + type;
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => { t.className = 'toast ' + type; }, 3500);
+        }
+
+        function esc(s) {
+            if (s == null) return '';
+            return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+
+        async function api(path, options = {}) {
+            const res = await fetch(`${API_BASE_URL}${path}`, {
+                headers: { 'Content-Type': 'application/json' },
+                ...options
+            });
+            let data = null;
+            try { data = await res.json(); } catch (e) { data = {}; }
+            if (!res.ok) {
+                const detail = data.detail;
+                const msg = (detail && (detail.error || (typeof detail === 'string' ? detail : JSON.stringify(detail)))) 
+                            || data.error || `Request failed (${res.status})`;
+                throw new Error(msg);
+            }
+            return data;
+        }
+
+        // ========== VERIFICATION ==========
+        document.getElementById('verifyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('verifyEmail').value.trim();
+            const btn = document.getElementById('verifyBtn');
+            const original = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Verifying...';
+            try {
+                const data = await api('/verify-email', {
+                    method: 'POST',
+                    body: JSON.stringify({ email })
+                });
+                currentEmail = data.email;
+                currentRole = data.role;
+                sessionStorage.setItem('ttuEmail', currentEmail);
+                sessionStorage.setItem('ttuRole', currentRole);
+                enterDashboard();
+                showToast(`Verified as ${currentRole}.`, 'success');
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = original;
+            }
+        });
+
+        function enterDashboard() {
+            document.getElementById('verifyCard').classList.add('hidden');
+            document.getElementById('logoutBtn').style.display = 'inline-flex';
+
+            const chip = document.getElementById('navEmail');
+            chip.textContent = currentEmail;
+            chip.classList.add('show');
+            const roleBadge = document.getElementById('navRole');
+            roleBadge.textContent = currentRole;
+            roleBadge.className = 'role-badge ' + (currentRole === 'staff' ? 'role-staff' : 'role-student');
+            roleBadge.style.display = 'inline-block';
+
+            if (currentRole === 'staff') {
+                document.getElementById('staffDashboard').classList.remove('hidden');
+                document.getElementById('studentDashboard').classList.add('hidden');
+                loadStaffGroups();
+            } else {
+                document.getElementById('studentDashboard').classList.remove('hidden');
+                document.getElementById('staffDashboard').classList.add('hidden');
+                loadStudentGroups();
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('ttuEmail');
+            sessionStorage.removeItem('ttuRole');
+            location.reload();
+        }
+
+        // ========== STAFF: CREATE GROUP ==========
+        document.getElementById('createGroupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('createBtn');
+            const original = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Creating...';
+            try {
+                const payload = {
+                    email: currentEmail,
+                    displayName: document.getElementById('groupName').value.trim(),
+                    description: document.getElementById('groupDesc').value.trim(),
+                    mailNickname: document.getElementById('groupNick').value.trim() || null
+                };
+                const group = await api('/groups', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                showToast(`Group "${group.displayName}" created.`, 'success');
+                document.getElementById('createGroupForm').reset();
+                loadStaffGroups();
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = original;
+            }
+        });
+
+        // ========== STAFF: LOAD OWNED GROUPS ==========
+        async function loadStaffGroups() {
+            const list = document.getElementById('staffGroupList');
+            list.innerHTML = '<div class="empty-state"><span class="spinner" style="border-top-color:var(--primary-500);border-color:var(--neutral-300);"></span></div>';
+            try {
+                const data = await api(`/groups/owned?email=${encodeURIComponent(currentEmail)}`);
+                renderStaffGroups(data.value || []);
+            } catch (err) {
+                list.innerHTML = `<div class="empty-state"><i class="fas fa-triangle-exclamation"></i>${esc(err.message)}</div>`;
+            }
+        }
+
+        function renderStaffGroups(groups) {
+            const list = document.getElementById('staffGroupList');
+            if (!groups.length) {
+                list.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i>You do not own any groups yet. Create one above.</div>';
+                return;
+            }
+            list.innerHTML = groups.map(g => `
+                <div class="group-item" data-id="${esc(g.id)}">
+                    <div class="group-item-top">
+                        <div>
+                            <h3>${esc(g.displayName)}</h3>
+                            <div class="group-desc">${esc(g.description || 'No description')}</div>
+                            <div class="group-meta">
+                                <span><i class="fas fa-envelope"></i> ${esc(g.mail || '—')}</span>
+                                <span><i class="fas fa-eye"></i> ${esc(g.visibility || 'Private')}</span>
+                            </div>
+                        </div>
+                        <div class="group-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="toggleMembers('${esc(g.id)}')">
+                                <i class="fas fa-user-group"></i> Members
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteGroup('${esc(g.id)}', '${esc(g.displayName)}')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                    <div class="members-panel" id="members-${esc(g.id)}">
+                        <strong style="font-size:0.9rem;">Members</strong>
+                        <div class="member-chips" id="chips-${esc(g.id)}"><em style="color:var(--neutral-500);font-size:0.85rem;">Loading…</em></div>
+                        <div class="add-member-row">
+                            <input type="email" id="addmember-${esc(g.id)}" placeholder="student@students.ttu.ac.ke or staff@ttu.ac.ke">
+                            <button class="btn btn-primary btn-sm" onclick="addMember('${esc(g.id)}')"><i class="fas fa-user-plus"></i> Add</button>
+                        </div>
+
+                        <div class="bulk-panel">
+                            <h4><i class="fas fa-file-arrow-up"></i> Add Members in Bulk</h4>
+                            <div class="bulk-help">
+                                Upload a <strong>.xlsx</strong>, <strong>.xlsm</strong> or <strong>.csv</strong> with one email per row under an <code>email</code> column.
+                                <a href="${API_BASE_URL}/staff/groups/members/template" target="_blank" rel="noopener"><i class="fas fa-download"></i> Download template</a>
+                            </div>
+                            <div class="bulk-drop">
+                                <input type="file" id="bulkfile-${esc(g.id)}" accept=".xlsx,.xlsm,.csv">
+                                <button class="btn btn-primary btn-sm" id="bulkbtn-${esc(g.id)}" onclick="bulkUpload('${esc(g.id)}')">
+                                    <i class="fas fa-upload"></i> Upload &amp; Add
+                                </button>
+                                <span class="bulk-file" id="bulkfile-name-${esc(g.id)}"></span>
+                            </div>
+                            <div id="bulk-result-${esc(g.id)}"></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function deleteGroup(groupId, name) {
+            if (!confirm(`Delete the group "${name}"? This action cannot be undone.`)) return;
+            try {
+                await api(`/groups/${encodeURIComponent(groupId)}?email=${encodeURIComponent(currentEmail)}`, {
+                    method: 'DELETE'
+                });
+                showToast('Group deleted.', 'success');
+                loadStaffGroups();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // ========== STAFF: MEMBER MANAGEMENT ==========
+        async function toggleMembers(groupId) {
+            const panel = document.getElementById(`members-${groupId}`);
+            panel.classList.toggle('show');
+            if (panel.classList.contains('show')) {
+                await loadMembers(groupId);
+            }
+        }
+
+        async function loadMembers(groupId) {
+            const chips = document.getElementById(`chips-${groupId}`);
+            try {
+                const data = await api(`/groups/${encodeURIComponent(groupId)}/members`);
+                const members = data.value || [];
+                if (!members.length) {
+                    chips.innerHTML = '<em style="color:var(--neutral-500);font-size:0.85rem;">No members yet.</em>';
+                    return;
+                }
+                chips.innerHTML = members.map(m => `
+                    <span class="member-chip">
+                        ${esc(m.displayName || m.userPrincipalName || m.id)}
+                        <button title="Remove member" onclick="removeMember('${esc(groupId)}', '${esc(m.id)}')">
+                            <i class="fas fa-xmark"></i>
+                        </button>
+                    </span>
+                `).join('');
+            } catch (err) {
+                chips.innerHTML = `<em style="color:var(--danger-500);font-size:0.85rem;">${esc(err.message)}</em>`;
+            }
+        }
+
+        async function addMember(groupId) {
+            const input = document.getElementById(`addmember-${groupId}`);
+            const email = input.value.trim();
+            if (!email) { showToast('Enter a member email.', 'error'); return; }
+            try {
+                await api(`/groups/${encodeURIComponent(groupId)}/members`, {
+                    method: 'POST',
+                    body: JSON.stringify({ email: currentEmail, memberEmail: email })
+                });
+                input.value = '';
+                showToast('Member added.', 'success');
+                loadMembers(groupId);
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // ========== STAFF: BULK UPLOAD ==========
+        const STATUS_LABELS = {
+            added: 'Added',
+            already_member: 'Already member',
+            invalid_domain: 'Invalid domain',
+            not_found: 'Not found',
+            duplicate: 'Duplicate',
+            failed: 'Failed',
+        };
+
+        function renderBulkResult(groupId, report) {
+            const el = document.getElementById(`bulk-result-${groupId}`);
+            if (!el) return;
+            const s = report.summary || {};
+            const rows = report.results || [];
+            const tableRows = rows.map(r => `
+                <tr>
+                    <td>${esc(r.row)}</td>
+                    <td>${esc(r.email)}</td>
+                    <td><span class="status-tag status-${esc(r.status)}">${esc(STATUS_LABELS[r.status] || r.status)}</span></td>
+                    <td>${esc(r.error || r.userId || '')}</td>
+                </tr>`).join('');
+            el.innerHTML = `
+                <div class="bulk-summary">
+                    <span class="stat-pill ok"><i class="fas fa-circle-check"></i> Added: ${esc(s.added ?? 0)}</span>
+                    <span class="stat-pill info">Already member: ${esc(s.alreadyMember ?? 0)}</span>
+                    <span class="stat-pill warn">Invalid domain: ${esc(s.invalidDomain ?? 0)}</span>
+                    <span class="stat-pill warn">Not found: ${esc(s.notFound ?? 0)}</span>
+                    <span class="stat-pill">Duplicates: ${esc(s.duplicatesInFile ?? 0)}</span>
+                    <span class="stat-pill err">Failed: ${esc(s.failed ?? 0)}</span>
+                    ${s.skippedOverCap ? `<span class="stat-pill err">Skipped (over cap): ${esc(s.skippedOverCap)}</span>` : ''}
+                </div>
+                <div class="result-table-wrap">
+                    <table class="result-table">
+                        <thead><tr><th>Row</th><th>Email</th><th>Status</th><th>Detail</th></tr></thead>
+                        <tbody>${tableRows || '<tr><td colspan="4">No rows.</td></tr>'}</tbody>
+                    </table>
+                </div>
+                <div style="margin-top:0.8rem;">
+                    <button class="btn btn-secondary btn-sm" onclick="downloadBulkReport('${esc(groupId)}')">
+                        <i class="fas fa-download"></i> Download report (CSV)
+                    </button>
+                </div>`;
+            el._lastReport = report;
+
+            // Reset the file input so the same file can be re-uploaded if needed.
+            const fileInput = document.getElementById(`bulkfile-${groupId}`);
+            if (fileInput) fileInput.value = '';
+            const nameSpan = document.getElementById(`bulkfile-name-${groupId}`);
+            if (nameSpan) nameSpan.textContent = '';
+        }
+
+        async function bulkUpload(groupId) {
+            const fileInput = document.getElementById(`bulkfile-${groupId}`);
+            const btn = document.getElementById(`bulkbtn-${groupId}`);
+            const file = fileInput && fileInput.files && fileInput.files[0];
+            if (!file) { showToast('Choose a .xlsx, .xlsm or .csv file first.', 'error'); return; }
+
+            const original = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Uploading…';
+            try {
+                const fd = new FormData();
+                fd.append('file', file);
+                fd.append('email', currentEmail);
+
+                const res = await fetch(`${API_BASE_URL}/staff/groups/${encodeURIComponent(groupId)}/members/bulk`, {
+                    method: 'POST',
+                    body: fd,
+                });
+                let data = null;
+                try { data = await res.json(); } catch (e) { data = {}; }
+                if (!res.ok) {
+                    const detail = data.detail;
+                    const msg = (detail && (detail.error || (typeof detail === 'string' ? detail : JSON.stringify(detail))))
+                                || `Upload failed (${res.status})`;
+                    throw new Error(msg);
+                }
+                renderBulkResult(groupId, data);
+                showToast(`Added ${data.summary.added} of ${data.summary.uniqueEmails} unique emails.`, 'success');
+                loadMembers(groupId);
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = original;
+            }
+        }
+
+        function downloadBulkReport(groupId) {
+            const el = document.getElementById(`bulk-result-${groupId}`);
+            const report = el && el._lastReport;
+            if (!report) { showToast('No report to download yet.', 'error'); return; }
+            const header = ['Row', 'Email', 'Status', 'UserId', 'Detail'];
+            const lines = [header.join(',')];
+            const safe = v => {
+                const s = (v == null ? '' : String(v)).replace(/"/g, '""');
+                return /[",\n]/.test(s) ? `"${(/^[=+\-@]/.test(s) ? "'" + s : s)}"` : s;
+            };
+            (report.results || []).forEach(r => {
+                lines.push([r.row, r.email, r.status, r.userId || '', r.error || ''].map(safe).join(','));
+            });
+            const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `member-upload-report-${groupId.slice(0, 8)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        async function removeMember(groupId, memberId) {
+            if (!confirm('Remove this member from the group?')) return;
+            try {
+                await api(`/groups/${encodeURIComponent(groupId)}/members/${encodeURIComponent(memberId)}?email=${encodeURIComponent(currentEmail)}`, {
+                    method: 'DELETE'
+                });
+                showToast('Member removed.', 'success');
+                loadMembers(groupId);
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // ========== STUDENT: LOAD MY GROUPS (READ-ONLY) ==========
+        async function loadStudentGroups() {
+            const list = document.getElementById('studentGroupList');
+            list.innerHTML = '<div class="empty-state"><span class="spinner" style="border-top-color:var(--primary-500);border-color:var(--neutral-300);"></span></div>';
+            try {
+                const data = await api(`/students/${encodeURIComponent(currentEmail)}/groups`);
+                renderStudentGroups(data.value || []);
+            } catch (err) {
+                list.innerHTML = `<div class="empty-state"><i class="fas fa-triangle-exclamation"></i>${esc(err.message)}</div>`;
+            }
+        }
+
+        function renderStudentGroups(groups) {
+            const list = document.getElementById('studentGroupList');
+            if (!groups.length) {
+                list.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i>You are not a member of any group yet. Your lecturer or staff will add you to the relevant groups.</div>';
+                return;
+            }
+            list.innerHTML = groups.map(g => `
+                <div class="group-item">
+                    <div class="group-item-top">
+                        <div>
+                            <h3>${esc(g.displayName)}</h3>
+                            <div class="group-desc">${esc(g.description || 'No description')}</div>
+                            <div class="group-meta">
+                                <span><i class="fas fa-envelope"></i> ${esc(g.mail || '—')}</span>
+                                <span style="color:var(--success-500);font-weight:600;"><i class="fas fa-circle-check"></i> Member</span>
+                            </div>
+                        </div>
+                        <div class="group-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="leaveGroup('${esc(g.id)}')"><i class="fas fa-right-from-bracket"></i> Leave</button>
+                        </div>
+                    </div>
+                </div>`).join('');
+        }
+
+        async function leaveGroup(groupId) {
+            if (!confirm('Leave this group? You can only rejoin if a staff member adds you again.')) return;
+            try {
+                await api(`/groups/${encodeURIComponent(groupId)}/leave`, {
+                    method: 'POST',
+                    body: JSON.stringify({ email: currentEmail })
+                });
+                showToast('Left group.', 'success');
+                loadStudentGroups();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // ========== INIT ==========
+        document.addEventListener('DOMContentLoaded', () => {
+            // Show the chosen bulk-file name as soon as it's picked (delegated,
+            // since bulk panels are re-rendered with each group list refresh).
+            document.addEventListener('change', (e) => {
+                const t = e.target;
+                if (t && t.type === 'file' && t.id && t.id.startsWith('bulkfile-')) {
+                    const groupId = t.id.slice('bulkfile-'.length);
+                    const nameSpan = document.getElementById(`bulkfile-name-${groupId}`);
+                    if (nameSpan) nameSpan.textContent = (t.files && t.files[0]) ? t.files[0].name : '';
+                }
+            });
+
+            const savedEmail = sessionStorage.getItem('ttuEmail');
+            const savedRole = sessionStorage.getItem('ttuRole');
+            if (savedEmail && savedRole) {
+                currentEmail = savedEmail;
+                currentRole = savedRole;
+                enterDashboard();
+            }
+        });
+    </script>
+</body>
+</html>
